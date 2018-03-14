@@ -21,6 +21,7 @@ public:
     int Solve_GMRES();
 
     void initSolver(int);
+    int GetRes(){return result;}
 private:
     MatSparseC3* A;
     VectorC3 B;
@@ -29,10 +30,14 @@ private:
     VectorC3 res; //current residual
     VectorC3 w; //current direction
     VectorC3 v;
-    VectorC3* Awp; //previous directions
+    VectorC3* Awp; //previous A*directions
+    VectorC3* wp; //previous directions
     double eps;
     C3 g;
     C3 rho;
+    int result;
+    int MAX_ITER;//nombre maximal d'iteration
+    int TRUNC; // size of the truncated method (not implemented yet)
 };
 
 #endif // SOLVER_H

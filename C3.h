@@ -23,7 +23,7 @@ public:
     //Constructeur explictite à partir de 6 réels
     C3(R a,R b,R c,R d,R e, R f):X(a,d),Y(b,e),Z(c,f){}
     //Constructeur explicite à partir de 3 complexes
-    C3(C x,C y,C z):X(x.real(),x.imag()),Y(y.real(),y.imag()),Z(x.real(),z.imag()){}
+    C3(C x,C y,C z):X(x.real(),x.imag()),Y(y.real(),y.imag()),Z(z.real(),z.imag()){}
     //Constructeur explicite à partir de 2 elements de R3
     C3(R3 a,R3 b):X(a.X_(),b.X_()),Y(a.Y_(),b.Y_()),Z(a.Z_(),b.Z_()){}
 

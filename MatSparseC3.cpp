@@ -31,7 +31,7 @@ VectorC3::VectorC3(ifstream &fd)
                       //  cout<<line<<": Nb espaces = "<<ntmp<<endl;
                         if (ntmp==6)
                         {
-                            int* tmp = new int[ntmp] ;
+                            double* tmp = new double[ntmp] ;
                             // on met les entiers dans les cases
                             size_t spos ;
                             size_t isize ;
@@ -91,7 +91,7 @@ MatSparseC3::MatSparseC3(ifstream &fd)
                         int ntmp = nspace+1 ;
                         if (ntmp=1)
                         {
-                            int* tmp = new int[ntmp] ;
+                            double* tmp = new double[ntmp] ;
                             // on met les entiers dans les cases
                             size_t spos ;
                             size_t isize ;
@@ -178,7 +178,7 @@ MatSparseC3::MatSparseC3(ifstream &fd)
                             C_data.X[0][i]=C(tmp[0],tmp[3]);
                             C_data.X[1][i]=C(tmp[1],tmp[4]);
                             C_data.X[2][i]=C(tmp[2],tmp[5]);
-                            cout<<C_data.X[0][i]<<"  -   "<<C_data.X[1][i]<<"   -   "<<C_data.X[2][i]<<endl;
+                            //cout<<C_data.X[0][i]<<"  -   "<<C_data.X[1][i]<<"   -   "<<C_data.X[2][i]<<endl;
                         }
                     }
                 }

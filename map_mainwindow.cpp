@@ -145,10 +145,13 @@ void MAP_MainWindow::on_pushButton_solve_released()
     util::print_separator();
     cout<<"Lancement de la routine de resolution du probleme."<<endl;
     solver = new Solver(problem,GC,0.0000001);
+    if (solver->GetRes()==1)
+        ui->pushButton_save_output->setEnabled(true);
 }
 
 void MAP_MainWindow::on_pushButton_load_Mat_released()
 {
+    util::print_separator();
     cout<<"Chargement direct d'une matrice Sparse"<<endl;
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Matrix File"),
                                                     "",
@@ -181,6 +184,14 @@ void MAP_MainWindow::on_pushButton_load_Mat_released()
     ui->checkBox_it->setEnabled(true);
     ui->comboBox_solver->setEnabled(true);
 
-    solver = new Solver(mat,vec,OrthoDir,0.00001);
+    solver = new Solver(mat,vec,SolverMethod(ui->comboBox_solver_2->currentIndex()+1),0.00001);
+
+    if (solver->GetRes()==1)
+        ui->pushButton_save_output->setEnabled(true);
 }
 
+void MAP_MainWindow::on_pushButton_save_output_released()
+{
+//Open dialog in order to save the Output vector
+
+}

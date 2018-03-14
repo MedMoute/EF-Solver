@@ -33,7 +33,7 @@ public slots:
     void on_pushButton_load_BC_released();
     void on_pushButton_solve_released();
     void on_pushButton_load_Mat_released();
-
+    void on_pushButton_save_output_released();
 private:
     Ui::MAP_MainWindow *ui;
     Maillage3D *maillage;
