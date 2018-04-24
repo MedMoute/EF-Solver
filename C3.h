@@ -151,4 +151,9 @@ private:
     complex<R> X,Y,Z; //on interdit l'accès direct aux données en dehors de la classe.
 };
 
+inline ostream & operator<<(ostream & f, C3 c)
+{
+f << c.X_().real() << "+i" << c.X_().imag() <<" // "<< c.Y_().real() << "+i" << c.Y_().imag()<<" // "<< c.Z_().real() << "+i" << c.Z_().imag()  ;
+return f;
+}
 #endif // C3_H

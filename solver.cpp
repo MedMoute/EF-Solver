@@ -211,7 +211,7 @@ int Solver::Solve_MinRES()
     //Construction of the Lanczos Basis Vectors
     while (p<MAX_ITER || R(comp.norm())>=eps)
     {
-        cout<<"Iteration n"<<p<<" - Residu : "<<R(comp.norm())<<endl;
+        cout<<"Iteration n"<<p<<" - Residu : "<<comp<<endl;
         vp[p+1].init(B.size());
         wp[p].init(B.size());
         cout<<"init done"<<endl;
