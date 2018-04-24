@@ -7,7 +7,7 @@
 #include "MatSparseC3.h"
 #include "feproblem.h"
 
-enum SolverMethod {GC=1,OrthoDir=2,GMRES=3};
+enum SolverMethod {GC=1,OrthoDir=2,GMRES=3,MinRES=4};
 
 class Solver
 {
@@ -19,6 +19,7 @@ public:
     int Solve_GC();
     int Solve_Orthodir();
     int Solve_GMRES();
+    int Solve_MinRES();
 
     void initSolver(int);
     int GetRes(){return result;}
@@ -32,6 +33,7 @@ private:
     VectorC3 v;
     VectorC3* Awp; //previous A*directions
     VectorC3* wp; //previous directions
+    VectorC3* vp;//MinRES Lanczos vectors
     double eps;
     C3 g;
     C3 rho;

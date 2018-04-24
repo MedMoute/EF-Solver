@@ -1,12 +1,11 @@
 #include "solver.h"
 #include "utils.h"
 
-//Sparse Linear Algebra solver system for ComplexVectoriel (C3) Matrices
+//Sparse Linear Algebra solver system for ComplexVectoriel (C3) Symetrical Matrices
 //
 //Implemented solvers:
 //Iterative Methods
 // -Conjugate Gradient
-// -GMRES
 // -MinRES
 // -ORTHODIR
 //
@@ -42,9 +41,14 @@ Solver::Solver(FEProblem* _fep, SolverMethod _meth,double _eps):A(_fep->GetA()),
         wp=new VectorC3;
         Awp = new VectorC3;
         result = Solve_Orthodir();
+        delete wp,Awp;
         break;
-    case GMRES:
-        result = Solve_GMRES();
+    case MinRES:
+        wp = new VectorC3;
+        vp = new VectorC3;
+        result = Solve_MinRES();
+        delete wp,vp;
+        break;
     default:
         break;
     }
@@ -64,9 +68,14 @@ Solver::Solver(MatSparseC3 _mat, VectorC3 _vec, SolverMethod _meth, double _eps)
         wp=new VectorC3;
         Awp = new VectorC3;
         result = Solve_Orthodir();
+        delete wp,Awp;
         break;
-    case GMRES:
-        result = Solve_GMRES();
+    case MinRES:
+        wp = new VectorC3;
+        vp = new VectorC3;
+        result = Solve_MinRES();
+        delete wp,vp;
+        break;
     default:
         break;
     }
@@ -83,7 +92,7 @@ int Solver::Solve_Orthodir()
     res-=B; // res = AXo- b
     w=res; //w=res
     A->MatVectMul(w,v); // v = Aw
-    R3 v_n=v.Re_norms();
+    C3 v_n=v.Re_norms();
     w/=v_n;       // w=w/||v||
     wp[0].init(B.size());
     wp[0]=w;
@@ -113,7 +122,7 @@ int Solver::Solve_Orthodir()
         }
         //cout<<"w  : "<<w.X[0]<<endl;
         //Orthonormalisation
-        R3 v_n=v.Re_norms();
+        C3 v_n=v.Re_norms();
         w/=v_n;  // w_p+1= w /||v||
         wp[j+1].init(B.size());
         wp[j+1]=w;
@@ -183,18 +192,68 @@ int Solver::Solve_GC()
     }
 }
 
-int Solver::Solve_GMRES()
+int Solver::Solve_MinRES()
 {
-    cout<<"Starting resolution of the problem w/ the GMRES Method"<<endl;
+    cout<<"Starting resolution of the problem w/ the MinRES Method"<<endl;
     int p=0;
-    R3 r;
-    //GMRES Initialisation
+    C3 alpha;
+    R3 norm_alpha;
+    C3 r[2],t[3],c[2],s[2],a[2],b,comp;
+    //MinRES Initialisation
     X=B; //We assume Xo=b
     A->MatVectMul(X,res); //res=AXo
     res-=B; // res= AXo-b
-    r=-res.Re_norms();
+    r[0]=-res.Re_norms();
+    //For the MinRES Method the direction vectors are the Lanczos Basis Vectors
+    vp[0].init(B.size());
+    vp[0]=res*r[0].comp_inv();
+    comp=r[0];
+    //Construction of the Lanczos Basis Vectors
+    while (p<MAX_ITER || R(comp.norm())>=eps)
+    {
+        cout<<"Iteration n"<<p<<" - Residu : "<<R(comp.norm())<<endl;
+        vp[p+1].init(B.size());
+        wp[p].init(B.size());
+        cout<<"init done"<<endl;
+        A->MatVectMul(vp[p],w); // w=A*vp
+        t[0]=t[2];
+        w-=vp[p]*t[0];
+        t[1]=(w,wp[p]);
+        w-=vp[p]*t[1];
+        t[2]=w.Re_norms();
+        vp[p+1]=w*t[2].comp_inv();
+        //Application of the two previous Givens Rotations
+        r[0]=-t[0]*s[0];
+        a[0]=t[0]*c[0];
 
-        //Construction of the Arnoldi Basis Vectors
+        cout<<"givens done"<<endl;
+        //
+        r[1]=c[1]*a[0]-s[1]*t[1];
+        a[1]=s[1]*a[0]+c[1]*t[1];
+        //Update c[] and s[]
+        c[0]=c[1];
+        s[0]=s[1];
+        c[1]=C3((t[2]/a[1])+C3(1,0,0,0,0,0)).comp_inv().sqrt_();
+        s[1]=-c[1]*t[2]/a[1];
+        //
+        r[2]=c[1]*a[1]-s[1]*t[2];
+        b=c[1]*r[2];
+        comp=s[1]*r[2];
+        switch (p)
+        {
+            case 0:
+            wp[p]=vp[p]*r[2].comp_inv();
+                break;
+            case 1:
+            wp[p]=(vp[p]-wp[p-1]*r[0]-wp[p])*r[2].comp_inv();
+                break;
+            default:
+            wp[p]=(vp[p]-wp[p-1]*r[0]-wp[p]*r[1])*r[2].comp_inv();
+                break;
+        }
+        X+=wp[p]*b;
+        p++;
+    }
 }
 
 void Solver::initSolver(int _l)

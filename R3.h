@@ -95,6 +95,8 @@ public:
             exit(1);
         }
     }
+    //Méthode pour obtenir les coefficients inverses
+    R3 inv() const{return R3(1/X,1/Y,1/Z);}
 
     R X_(){return X;}
     R Y_(){return Y;}

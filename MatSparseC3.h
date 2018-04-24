@@ -44,8 +44,11 @@ public:
             return this->X[_i].l2();
     }
 
-    R3 Re_norms()
-    {return R3(X[0].l2(),X[1].l2(),X[2].l2());}
+    C3 Re_norms()
+    //Pour ne pas avoir de souci avec les variables issues de produits scalaires
+    //ou de normes, on suppose que la norme d'un vecteur C3 est une donnée de C3
+    // meme si sa partie imaginaire est évidemment nulle.
+    {return C3(X[0].l2(),X[1].l2(),X[2].l2(),0,0,0);}
 
     //Operateurs d'affectation (+,-,*,/)
     VectorC3& operator+=(VectorC3 P) {
@@ -124,6 +127,12 @@ public:
         KN<C> x(X[0]); x.resize(this->size()); x*=k;
         KN<C> y(X[1]); y.resize(this->size());y*=k;
         KN<C> z(X[2]); z.resize(this->size());z*=k;
+        return VectorC3(x,y,z);}
+
+    VectorC3 operator*(R3 k) {
+        KN<C> x(X[0]); x.resize(this->size()); x*=k.X_();
+        KN<C> y(X[1]); y.resize(this->size());y*=k.Y_();
+        KN<C> z(X[2]); z.resize(this->size());z*=k.Z_();
         return VectorC3(x,y,z);}
 
     VectorC3 operator*(C3 k) {

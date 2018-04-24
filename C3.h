@@ -137,6 +137,10 @@ public:
     R3 Re() const{ return (R3(X.real(),Y.real(),Z.real())); }
     //Recupération de la partie imaginaire
     R3 Im() const{ return (R3(X.imag(),Y.imag(),Z.imag())); }
+    //Récupération des inverses de chacune des composantes
+    C3 comp_inv() const{ return (C3(1/X.real(),1/Y.real(),1/Z.real(),1/X.imag(),1/Y.imag(),1/Z.imag())); }
+
+    C3 sqrt_() const{return (C3(sqrt(C(X)),sqrt(C(Y)),sqrt(C(Z))));}
 
     C X_(){return X;}
     C Y_(){return Y;}
