@@ -41,6 +41,12 @@ public:
         Z /= k;
         return  *this;}
 
+    bool operator==(R3 P)const{
+        if (X==P.X_() && Y==P.Y_() && Z==P.Z_())
+            return true;
+        else return false;
+    }
+
     //Opérateurs binaires (+,-,*,/,PS(,))
     R3 operator+(R3 & P) {
         return(R3(X+P.X_(),Y+P.Y_(),Z+P.Z_()));}
@@ -98,9 +104,9 @@ public:
     //Méthode pour obtenir les coefficients inverses
     R3 inv() const{return R3(1/X,1/Y,1/Z);}
 
-    R X_(){return X;}
-    R Y_(){return Y;}
-    R Z_(){return Z;}
+    R X_()const{return X;}
+    R Y_()const{return Y;}
+    R Z_()const{return Z;}
 private:
     //Membres
     R X,Y,Z; //on interdit l'accès direct aux données en dehors de la classe.
