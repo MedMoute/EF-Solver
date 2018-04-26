@@ -225,7 +225,7 @@ int Solver::Solve_MinRES()
         //Application of the two previous Givens Rotations
         r[0]=-t[0]*s[0];
         a[0]=t[0]*c[0];
-
+        cout<<t[2]<<endl;
         cout<<"givens done"<<endl;
         //
         r[1]=c[1]*a[0]-s[1]*t[1];
@@ -233,12 +233,13 @@ int Solver::Solve_MinRES()
         //Update c[] and s[]
         c[0]=c[1];
         s[0]=s[1];
-        c[1]=C3((t[2]/a[1])+C3(1,0,0,0,0,0)).comp_inv().sqrt_();
+        c[1]=C3((t[2]/a[1])+C3(1,0,1,0,1,0)).comp_inv().sqrt_();
         s[1]=-c[1]*t[2]/a[1];
         //
         r[2]=c[1]*a[1]-s[1]*t[2];
         b=c[1]*r[2];
         comp=s[1]*r[2];
+        cout<<comp<<endl;
         switch (p)
         {
             case 0:

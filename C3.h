@@ -65,6 +65,12 @@ public:
         Z /= P.Z_();
         return  *this;}
 
+    bool operator==(C3 P)const{
+        if (X==P.X_() && Y==P.Y_() && Z==P.Z_())
+            return true;
+        else return false;
+    }
+
     //Opérateurs binaires (+,-,*,/,PS(,))
     C3 operator+(C3 P) {
         return(C3(X.real()+P.X_().real(),Y.real()+P.Y_().real(),Z.real()+P.Z_().real(),X.imag()+P.X_().imag(),Y.imag()+P.Y_().imag(),Z.imag()+P.Z_().imag()));}
@@ -72,13 +78,18 @@ public:
         return(C3(X.real()-P.X_().real(),Y.real()-P.Y_().real(),Z.real()-P.Z_().real(),X.imag()-P.X_().imag(),Y.imag()-P.Y_().imag(),Z.imag()-P.Z_().imag()));}
     C3 operator*( R k) {
         return(C3(k*X.real(),k*Y.real(),k*Z.real(),k*X.imag(),k*Y.imag(),k*Z.imag()));}
+    C3 operator*( C k) {
+        return(C3(C(X*k),C(Y*k),C(Z*k)));}
+    //Vectorial operations are done COMPONENT-WISE
     C3 operator* (C3 P) {
-        return(C3(C(X.real()*P.X_().real()-X.imag()*P.X_().imag(),X.imag()*P.X_().real()+X.real()*P.X_().imag()),C(Y.real()*P.Y_().real()-Y.imag()*P.Y_().imag(),Y.imag()*P.Y_().real()+Y.real()*P.Y_().imag()),C(Z.real()*P.Z_().real()-Z.imag()*P.Z_().imag(),Z.imag()*P.Z_().real()+Z.real()*P.Z_().imag())));}
-
+        return(C3(C(X*P.X_()),C(Y*P.Y_()),C(Z*P.Z_())));}
     C3 operator/(const R k){
         return(C3((1/k)*X.real(),(1/k)*Y.real(),(1/k)*Z.real(),(1/k)*X.imag(),(1/k)*Y.imag(),(1/k)*Z.imag()));}
-  C3 operator/ (C3 P){
-        return(C3(X.real()/P.v_norm().X_(),Y.real()/P.v_norm().Y_(),Z.real()/P.v_norm().Z_(),X.imag()/P.v_norm().X_(),Y.imag()/P.v_norm().Y_(),Z.imag()/P.v_norm().Z_()));}
+    C3 operator/( C k) {
+        return(C3(C(X/k),C(Y/k),C(Z/k)));}
+    //Vectorial operations are done COMPONENT-WISE
+    C3 operator/ (C3 P)const{
+        return(C3(C(X/P.X_()),C(Y/P.Y_()),C(Z/P.Z_())));}
 
     // Attention le produit scalaire dans C3 (donc hermitien) n'est PAS commutatif
     //          3        ___      3
@@ -116,10 +127,10 @@ public:
             exit(1);
         }
     }
-    R3 v_norm()
+    const R3 v_norm()
     {return R3(sqrt(X.real()*X.real()+X.imag()*X.imag()),sqrt(Y.real()*Y.real()+Y.imag()*Y.imag()),sqrt(Z.real()*Z.real()+Z.imag()*Z.imag()));}
     //Méthodes
-    R norm()
+    const R norm()
     {return (sqrt(X.real()*X.real()+Y.real()*Y.real()+Z.real()*Z.real()+X.imag()*X.imag()+Y.imag()*Y.imag()+Z.imag()*Z.imag()));}
 
     //Récupération des composantes
@@ -138,13 +149,13 @@ public:
     //Recupération de la partie imaginaire
     R3 Im() const{ return (R3(X.imag(),Y.imag(),Z.imag())); }
     //Récupération des inverses de chacune des composantes
-    C3 comp_inv() const{ return (C3(1/X.real(),1/Y.real(),1/Z.real(),1/X.imag(),1/Y.imag(),1/Z.imag())); }
+    C3 comp_inv() const{ return (C3(C(1./X),C(1./Y),C(1./Z))); }
 
     C3 sqrt_() const{return (C3(sqrt(C(X)),sqrt(C(Y)),sqrt(C(Z))));}
 
-    C X_(){return X;}
-    C Y_(){return Y;}
-    C Z_(){return Z;}
+    C X_()const{return X;}
+    C Y_()const{return Y;}
+    C Z_()const{return Z;}
 
 private:
     //Membres
@@ -153,7 +164,7 @@ private:
 
 inline ostream & operator<<(ostream & f, C3 c)
 {
-f << c.X_().real() << "+i" << c.X_().imag() <<" // "<< c.Y_().real() << "+i" << c.Y_().imag()<<" // "<< c.Z_().real() << "+i" << c.Z_().imag()  ;
+f << c.X_().real() << "+" << c.X_().imag() <<"i // "<< c.Y_().real() << "+" << c.Y_().imag()<<"i // "<< c.Z_().real() << "+" << c.Z_().imag()<<"i"  ;
 return f;
 }
 #endif // C3_H
