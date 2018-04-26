@@ -476,6 +476,7 @@ void FEProblem::DisplayElementaryStiffnessMatrix(int n_elem)
 }
 void FEProblem::BuildPoissonOperator()
 {
+    //Timer start
     auto start_time = std::chrono::system_clock::now();
 
     map<int,tuple<int,int,int,int>>::iterator m_it;
@@ -510,7 +511,7 @@ void FEProblem::BuildPoissonOperator()
             {
                 A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
                 //For "safety, fill the other components for now
-                //TODO : clean that later
+                // Check if there is overlap in the data -> might create erroneous operator
                 A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
                 A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
             }

@@ -111,13 +111,15 @@ int Solver::Solve_Orthodir()
         A->MatVectMul(w,v); //v=Aw
 
         // AtA - Orhogonalisation de la direction de descente par rapport aux directions précedentes
-        for(p=0;p<j;p++)
+        for(p=0;p<=j;p++)
         {
             C3 alpha=(v,Awp[p]); //a_p = (v.Aw_p)
-            //cout<<"Alpha : "<<alpha.X_()<<endl;
+            //cout<<"Alpha : "<<alpha<<endl;
             w-=wp[p]*alpha; // w = w-a_p*v_p
             v-=Awp[p]*alpha; // v = v-a_p*Aw_p
-            //cout<<"v ["<<j<<"] : "<<v.X[0]<<endl;
+            //cout<<"(w,w["<<p<<"])"<<(w,wp[p])<<endl;
+            //cout<<"(v,Aw["<<p<<"])"<<(v,Awp[p])<<endl;
+
             //cout<<"w ["<<j<<"] : "<<w.X[0]<<endl;
         }
         //cout<<"w  : "<<w.X[0]<<endl;
@@ -135,7 +137,7 @@ int Solver::Solve_Orthodir()
         res+=Awp[j+1]*rho;
 
         cout<<"Iter "<<j+1<<": ||res|| ="<<res.Re_norm()<<endl;
-        cout<<res.Re_norm(0)<<" - "<<res.Re_norm(1)<<" - "<<res.Re_norm(2)<<endl;
+        //cout<<"Res : "<<res.Re_norms()<<endl;
         j++;
     }
     cout<<"Solution sur X : "<<endl;
