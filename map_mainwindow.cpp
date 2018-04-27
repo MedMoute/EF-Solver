@@ -131,8 +131,9 @@ void MAP_MainWindow::on_pushButton_mat_assemb_released()
     //map<int,tuple<int,int,int,int>>* m_ptr = maillage->GetElementsMap();
     //DisplayElementaryMassMatrix(m_ptr->begin()->first);
     //DisplayElementaryStiffnessMatrix(m_ptr->begin()->first);
+    int op=ui->comboBox_problem->currentIndex();
 
-    problem = new FEProblem(maillage,rhs,bc);
+    problem = new FEProblem(maillage,rhs,bc,op);
 
     ui->pushButton_solve->setEnabled(true);
     ui->checkBox_dir->setEnabled(true);
@@ -144,7 +145,7 @@ void MAP_MainWindow::on_pushButton_solve_released()
 {
     util::print_separator();
     cout<<"Lancement de la routine de resolution du probleme."<<endl;
-    solver = new Solver(problem,GC,0.0000001);
+    solver = new Solver(problem,SolverMethod(ui->comboBox_solver->currentIndex()+1),0.0000001);
     if (solver->GetRes()==1)
         ui->pushButton_save_output->setEnabled(true);
 }

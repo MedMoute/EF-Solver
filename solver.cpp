@@ -6,12 +6,12 @@
 //Implemented solvers:
 //Iterative Methods
 // -Conjugate Gradient
-// -MinRES
-// -ORTHODIR
+// -MinRES  (NOT WORKING)
+// -ORTHODIR (WORKS - UNSTABLE)
 //
 // Direct Methods
-// -Greedy LU/QR
 // TODO : LU w/ decomposition tree
+//        Dense LU ? -> Matrix is stored sparsely, probably bad idea
 //
 // Solve Ax=B
 // A Hermitian Symetrical Sparse Matrix
@@ -119,10 +119,8 @@ int Solver::Solve_Orthodir()
             v-=Awp[p]*alpha; // v = v-a_p*Aw_p
             //cout<<"(w,w["<<p<<"])"<<(w,wp[p])<<endl;
             //cout<<"(v,Aw["<<p<<"])"<<(v,Awp[p])<<endl;
-
             //cout<<"w ["<<j<<"] : "<<w.X[0]<<endl;
         }
-        //cout<<"w  : "<<w.X[0]<<endl;
         //Orthonormalisation
         C3 v_n=v.Re_norms();
         w/=v_n;  // w_p+1= w /||v||
@@ -268,5 +266,5 @@ void Solver::initSolver(int _l)
     v.resize(_l);
     g=C3(0,0,0,0,0,0);
     rho=C3(0,0,0,0,0,0);
-    MAX_ITER=100;
+    MAX_ITER=300;
 }

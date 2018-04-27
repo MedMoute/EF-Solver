@@ -4,7 +4,7 @@
 
 #include <chrono>
 
-FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc):maillage(_maillage)
+FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op):maillage(_maillage),op(_op)
 {
     A = new MatSparseC3;
     util::print_separator();
@@ -109,24 +109,27 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc):maillage(_maillage
     int p=1;
     util::print_separator();
     cout<<"Remplissage de la matrice sparse de l'opérateur"<<endl;
-    switch (p)
+    //Remarque : La matrice A de l'opérateur n'est jamais construite densément
+    //on construit d'abord son profil creux, puis on rempit les données par recherche d'indices dans le profil creux
+    switch (op)
     {
-    case 1 :
+    case 0 :
     {
         cout<<"Construction de l'operateur pour l'equiation de Poisson"<<endl;
         BuildPoissonOperator();
+        break;
+    }
+
+    case 1 :
+    {
+        cout<<"Construction de l'operateur pour l'equation de Helmholtz"<<endl;
+        BuildHelmholtzOperator();
         break;
     }
     case 2 :
     {
         cout<<"Construction de l'operateur pour l'equiation de la chaleur stationnaire"<<endl;
         BuildHeatOperator();
-        break;
-    }
-    case 3 :
-    {
-        cout<<"Construction de l'operateur pour l'equation de Helmholtz"<<endl;
-        BuildHelmholtzOperator();
         break;
     }
     default:
@@ -474,6 +477,8 @@ void FEProblem::DisplayElementaryStiffnessMatrix(int n_elem)
         cout<<endl;
     }
 }
+//Construction de l'opérateur de Poisson en
+//utilisant la matrice de masse
 void FEProblem::BuildPoissonOperator()
 {
     //Timer start
@@ -524,9 +529,63 @@ void FEProblem::BuildPoissonOperator()
     std::cout<<"Constuction de l'operateur de Laplace : effectue en "<<elapsed_seconds<<"s."<<std::endl;
 }
 
+//Construction de l'opérateur de la Chaleur Stationnaire en
+//utilisant la matrice de rigidité du système
 void FEProblem::BuildHeatOperator()
 {
 
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos[4];
+    int i,j;
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de la Chaleur Stationnaire : effectue en "<<elapsed_seconds<<"s."<<std::endl;
 }
 
 void FEProblem::BuildHelmholtzOperator()
