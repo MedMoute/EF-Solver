@@ -156,12 +156,9 @@ MUP_NAMESPACE_START
                   // ist. sscanf und long double geht nicht mit GCC!
 
     in = a_pArg[0]->GetString();
-    
-#ifndef _UNICODE    
+
     sscanf(in.c_str(), "%lf", &out);
-#else
-    swscanf(in.c_str(), _T("%lf"), &out);
-#endif
+
 
     *ret = (float_type)out;
   }

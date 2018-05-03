@@ -47,36 +47,12 @@ MUP_NAMESPACE_START
   std::list<IToken*> IToken::s_Tokens;
 #endif
 
-#ifndef _UNICODE
 
-  //---------------------------------------------------------------------------
-  /** \brief Overloaded streaming operator for outputting the value type 
-             into an std::ostream. 
-      \param a_Stream The stream object
-      \param a_Val The value object to be streamed
-
-    This function is only present if _UNICODE is not defined.
-  */
   std::ostream& operator<<(std::ostream &a_Stream, const IToken &tok)
   {
     return a_Stream << tok.ToString();
   }  
 
-#else
-
-  //---------------------------------------------------------------------------
-  /** \brief Overloaded streaming operator for outputting the value type 
-             into an std::ostream. 
-      \param a_Stream The stream object
-      \param a_Val The value object to be streamed
-
-    This function is only present if _UNICODE is defined.
-  */
-  std::wostream& operator<<(std::wostream &a_Stream, const IToken &tok)
-  {
-    return a_Stream << tok.ToString();
-  }  
-#endif
 
 #ifdef MUP_LEAKAGE_REPORT
 

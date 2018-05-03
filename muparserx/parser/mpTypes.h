@@ -363,23 +363,7 @@ enum EErrorCodes
     ecUNDEFINED                 = -1  ///< Undefined message, placeholder to detect unassigned error messages
 };
 
-#if defined(_UNICODE)
 
-//------------------------------------------------------------------------------
-/** \brief Encapsulate wcout. */
-inline std::wostream& console()
-{
-    return std::wcout;
-}
-
-//------------------------------------------------------------------------------
-/** \brief Encapsulate cin. */
-inline std::wistream& console_in()
-{
-    return std::wcin;
-}
-
-#else
 
 /** \brief Encapsulate cout.
   
@@ -398,8 +382,6 @@ inline std::istream& console_in()
 {
     return std::cin;
 }
-
-#endif // _UNICODE
 
 }  // namespace mu
 

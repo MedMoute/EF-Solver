@@ -38,24 +38,11 @@
 #include <cassert>
 
 
-#if defined(_UNICODE)
   #if !defined(_T)
-  #define _T(x) L##x
-  #endif // not defined _T
-  #define MUP_STRING_TYPE std::wstring
-#else
-  #ifndef _T
-  /** \brief Macro needed for the "unicodification" of strings.
-  */
   #define _T(x) x
-  #endif
-  
-  /** \brief The string type used by muParserX. 
-  
-    This macro is needed for UNICODE support.
-  */
+  #endif // not defined _T
   #define MUP_STRING_TYPE std::string
-#endif
+
 
 /** \brief A macro containing the version of muParserX. */
 #define MUP_PARSER_VERSION _T("4.0.7 (2016-03-31; Dev)")

@@ -52,7 +52,6 @@
 
 MUP_NAMESPACE_START
 
-#ifndef _UNICODE
 
 //---------------------------------------------------------------------------
 /** \brief Overloaded streaming operator for outputting the value type 
@@ -66,22 +65,6 @@ MUP_NAMESPACE_START
 {
     return a_Stream << a_Val.ToString();
 }  
-
-#else
-
-//---------------------------------------------------------------------------
-/** \brief Overloaded streaming operator for outputting the value type
-           into an std::ostream.
-           \param a_Stream The stream object
-           \param a_Val The value object to be streamed
-
-           This function is only present if _UNICODE is defined.
-           */
-           std::wostream& operator<<(std::wostream &a_Stream, const IValue &a_Val)
-{
-    return a_Stream << a_Val.ToString();
-}
-#endif
 
 //---------------------------------------------------------------------------------------------
 Value operator*(const IValue& lhs, const IValue& rhs)

@@ -85,11 +85,7 @@ MUP_NAMESPACE_START
     private:
         std::vector<testfun_type> m_vTestFun;
 
-#if defined(_UNICODE)
-        std::wostream *m_stream;
-#else
         std::ostream *m_stream;
-#endif
 
         void AddTest(testfun_type a_pFun);
 
