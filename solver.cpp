@@ -1,12 +1,15 @@
 #include "solver.h"
 #include "utils.h"
 
+#include <QDir>
+#include <QDateTime>
+
 //Sparse Linear Algebra solver system for ComplexVectoriel (C3) Symetrical Matrices
 //
 //Implemented solvers:
 //Iterative Methods
 // -Conjugate Gradient
-// -MinRES  (NOT WORKING)
+// -MinRES
 // -ORTHODIR (WORKS - UNSTABLE)
 //
 // Direct Methods
@@ -41,13 +44,15 @@ Solver::Solver(FEProblem* _fep, SolverMethod _meth,double _eps):A(_fep->GetA()),
         wp=new VectorC3;
         Awp = new VectorC3;
         result = Solve_Orthodir();
-        delete wp,Awp;
+        delete Awp;
+        delete wp;
         break;
     case MinRES:
         wp = new VectorC3;
         vp = new VectorC3;
         result = Solve_MinRES();
-        delete wp,vp;
+        delete vp;
+        delete wp;
         break;
     default:
         break;
@@ -68,13 +73,14 @@ Solver::Solver(MatSparseC3 _mat, VectorC3 _vec, SolverMethod _meth, double _eps)
         wp=new VectorC3;
         Awp = new VectorC3;
         result = Solve_Orthodir();
-        delete wp,Awp;
+        //delete wp,Awp;
+
         break;
     case MinRES:
         wp = new VectorC3;
         vp = new VectorC3;
         result = Solve_MinRES();
-        delete wp,vp;
+        //delete wp,vp;
         break;
     default:
         break;
@@ -138,12 +144,6 @@ int Solver::Solve_Orthodir()
         //cout<<"Res : "<<res.Re_norms()<<endl;
         j++;
     }
-    cout<<"Solution sur X : "<<endl;
-    cout<<X.X[0]<<endl;
-    cout<<"Solution sur Y : "<<endl;
-    cout<<X.X[1]<<endl;
-    cout<<"Solution sur Z : "<<endl;
-    cout<<X.X[2]<<endl;
 }
 
 
@@ -156,7 +156,7 @@ int Solver::Solve_GC()
     X=B; //We assume Xo=b
     A->MatVectMul(X,res); //res=AXo
     res-=B; // res= AXo-b
-    cout<<"Iter 0 : ||res|| = "<<res.Re_norms().X_()<<endl;
+    cout<<"Iter 0 : Err : "<<this->computeError()<<endl;
 
 
     w=res;  // wo=res
@@ -164,97 +164,183 @@ int Solver::Solve_GC()
     while (p<MAX_ITER) //Max iteration control
     {
         A->MatVectMul(w,v); //v=Aw
-
         rho=-(res,w);
         rho/=(v,w);
-        //cout<<rho.X_()<<" - "<<rho.Y_()<<" - "<<rho.Z_();
-        //cout<<"||rho|| = "<<rho.v_norm().X_()<<" - "<<rho.v_norm().Y_()<<" - "<<rho.v_norm().Z_()<<endl;
-
         X+=w*rho;
         res+=v*rho;
         if((res.Re_norm()/B.Re_norm())<=(eps*eps))
         {
             util::print_separator();
             cout<<"The solver converged."<<endl;
-            cout<<"Solution sur X : "<<endl;
-            cout<<X.X[0]<<endl;
-            cout<<"Solution sur Y : "<<endl;
-            cout<<X.X[1]<<endl;
-            cout<<"Solution sur Z : "<<endl;
-            cout<<X.X[2]<<endl;
             break;
         }
         p++;
         g=-(res,v)/(v,w);
         w*=g;
         w+=res; //w=res+g*w
-        cout<<"Iter "<<p<<" : ||res|| = "<<res.Re_norms().X_()<<endl;
+        cout<<"Iter "<<p<<" : Err : "<<this->computeError()<<endl;
     }
+    //TMP data to grab if the program crashes/cannot recover after quitting the solver
+    util::print_separator();
+    string filepath;
+    filepath = (QDir::currentPath()+"/MINRESsolv_out.tmp").toStdString();
+    cout<<"Exporting Mesh File as "<<filepath<<"."<<endl;
+    std::ofstream FILE;
+    int j;
+    FILE.open(filepath.c_str(), std::ios::out);
+    if (FILE.fail())
+    {
+        std::cout<<"Erreur lors de l'ouverture de FILE"<<std::endl;
+        return 1;
+    }
+    else // Working out FILE : dumping output
+    {
+        FILE<<"#File Generated on "<<QDateTime::currentDateTime().toString().toStdString()<<" by EF-Solver.Solve_GC"<<endl;
+    }
+    for (j=0;j<B.size();j++)
+    {
+        FILE<<X.X[0][j]<<"~"<<X.X[1][j]<<"~"<<X.X[2][j]<<endl;
+    }
+    FILE<<endl;
+    for (j=0;j<B.size();j++)
+    {
+        FILE<<B.X[0][j]<<"~"<<B.X[1][j]<<"~"<<B.X[2][j]<<endl;
+    }
+    FILE.close();
 }
 
 int Solver::Solve_MinRES()
 {
-    cout<<"Starting resolution of the problem w/ the MinRES Method"<<endl;
-    int p=0;
-    C3 alpha;
-    R3 norm_alpha;
-    C3 r[2],t[3],c[2],s[2],a[2],b,comp;
-    //MinRES Initialisation
-    X=B; //We assume Xo=b
-    A->MatVectMul(X,res); //res=AXo
-    res-=B; // res= AXo-b
-    r[0]=-res.Re_norms();
-    //For the MinRES Method the direction vectors are the Lanczos Basis Vectors
+    cout<<"Starting resolution of the problem w/ the MINRES Method"<<endl;
+    //Since the number of iterations is bunded by MAX_ITER, we can initialize the
+
+    C3 t[MAX_ITER][3];
+    C3 r[MAX_ITER][3];
+
+    C3 n_res[MAX_ITER+1];
+
+    C3 c[MAX_ITER];
+    C3 s[MAX_ITER];
+
+    C3 a[MAX_ITER];
+    C3 b[MAX_ITER];
+    wp[0].init(B.size());
     vp[0].init(B.size());
-    vp[0]=res*r[0].comp_inv();
-    comp=r[0];
-    //Construction of the Lanczos Basis Vectors
-    while (p<MAX_ITER || R(comp.norm())>=eps)
+    vp[1].init(B.size());
+    //MinRES Initialisation
+    for (int p = 1;p<MAX_ITER;p++)
     {
-        cout<<"Iteration n"<<p<<" - Residu : "<<comp<<endl;
-        vp[p+1].init(B.size());
         wp[p].init(B.size());
-        cout<<"init done"<<endl;
-        A->MatVectMul(vp[p],w); // w=A*vp
-        t[0]=t[2];
-        w-=vp[p]*t[0];
-        t[1]=(w,wp[p]);
-        w-=vp[p]*t[1];
-        t[2]=w.Re_norms();
-        vp[p+1]=w*t[2].comp_inv();
-        //Application of the two previous Givens Rotations
-        r[0]=-t[0]*s[0];
-        a[0]=t[0]*c[0];
-        cout<<t[2]<<endl;
-        cout<<"givens done"<<endl;
-        //
-        r[1]=c[1]*a[0]-s[1]*t[1];
-        a[1]=s[1]*a[0]+c[1]*t[1];
-        //Update c[] and s[]
-        c[0]=c[1];
-        s[0]=s[1];
-        c[1]=C3((t[2]/a[1])+C3(1,0,1,0,1,0)).comp_inv().sqrt_();
-        s[1]=-c[1]*t[2]/a[1];
-        //
-        r[2]=c[1]*a[1]-s[1]*t[2];
-        b=c[1]*r[2];
-        comp=s[1]*r[2];
-        cout<<comp<<endl;
-        switch (p)
+        vp[p+1].init(B.size());
+        if( p==1 )
         {
-            case 0:
-            wp[p]=vp[p]*r[2].comp_inv();
-                break;
-            case 1:
-            wp[p]=(vp[p]-wp[p-1]*r[0]-wp[p])*r[2].comp_inv();
-                break;
-            default:
-            wp[p]=(vp[p]-wp[p-1]*r[0]-wp[p]*r[1])*r[2].comp_inv();
-                break;
+            //Init
+            //We assume X(0)=B
+            X=B;
+
+            A->MatVectMul(X,res);
+            res-=B;
+            vp[p]=res;
+            vp[p]/=vp[p].Re_norms();
+            wp[p]=vp[p];
+            n_res[p]=res.Re_norms();
         }
-        X+=wp[p]*b;
-        p++;
+        A->MatVectMul(vp[p],w);
+        if (p>1) {
+            t[p-1][2]=t[p][0];
+            w=w-vp[p-1]*t[p][0];
+        }
+
+        t[p][1]=(w,vp[p]);
+        w=w-vp[p]*t[p][1];
+        t[p+1][0]=w.Re_norms();
+
+
+        vp[p+1]=w*(t[p+1][0]).comp_inv();
+
+
+        //Apply Givens Rotations
+        //If p=2 only apply the First rotation
+        if (p>2) {
+            r[p-2][2]=-t[p-1][2]*s[p-2];
+            a[p-1]=t[p-1][2]*c[p-2];
+
+            r[p-1][1]=a[p-1]*c[p-1] - t[p][1]*s[p-1];
+            a[p]=a[p-1]*s[p-1] + t[p][1]*c[p-1];
+        }
+        else
+        {
+            if (p==2)
+            {
+                a[p-1]=t[p-1][2];
+
+                r[p-1][1]=a[p-1]*c[p-1] - t[p][1]*s[p-1];
+                a[p]=a[p-1]*s[p-1] + t[p][1]*c[p-1];
+            }
+            else
+                if (p==1)
+                    a[p]=t[p][1];
+        }
+        c[p]=C3(C3(C(1,0),C(1,0),C(1,0))/(C3(C(1,0),C(1,0),C(1,0))+(t[p+1][0]/a[p])*(t[p+1][0]/a[p]))).sqrt_();
+        s[p]=-c[p]*t[p+1][0]/a[p];
+        r[p][0]=c[p]*a[p] -s[p]*t[p+1][0];
+        //disp(S(p).C(p))
+        b[p]=-c[p]*n_res[p];
+        n_res[p+1]=s[p]*n_res[p] ;
+        cout<<"Iter num: "<<p<<" - ||res||"<<n_res[p]<<endl;
+
+        //Compute wp
+
+        if (p>2)
+        {
+            wp[p]=(vp[p]-wp[p-1]*r[p-1][1]-wp[p-2]*r[p-2][2]);
+            wp[p]/=r[p][0];
+        }
+        else
+            if (p==2)
+            {
+                wp[p]=(vp[p]-wp[p-1]*r[p-1][1]);
+                wp[p]/=r[p][0];
+            }
+            else
+                if (p==1)
+                {
+                    wp[p]=vp[p];
+                    wp[p]/=r[p][0];
+                }
+        //compute xp
+        X=X+wp[p]*b[p];
+        //    cout<<wp[p].X[0]<<endl;
+        if(n_res[p].norm()<eps)
+            break;
     }
+    //TMP data to grab if the program crashes/cannot recover after quitting the solver
+    util::print_separator();
+    string filepath;
+    filepath = (QDir::currentPath()+"/MINRESsolv_out.tmp").toStdString();
+    cout<<"Exporting Mesh File as "<<filepath<<"."<<endl;
+    std::ofstream FILE;
+    int j;
+    FILE.open(filepath.c_str(), std::ios::out);
+    if (FILE.fail())
+    {
+        std::cout<<"Erreur lors de l'ouverture de FILE"<<std::endl;
+        return 1;
+    }
+    else // Working out FILE : dumping output
+    {
+        FILE<<"#File Generated on "<<QDateTime::currentDateTime().toString().toStdString()<<" by EF-Solver.Solve_MinRES"<<endl;
+    }
+    for (j=0;j<B.size();j++)
+    {
+        FILE<<X.X[0][j]<<"~"<<X.X[1][j]<<"~"<<X.X[2][j]<<endl;
+    }
+    FILE<<endl;
+    for (j=0;j<B.size();j++)
+    {
+        FILE<<B.X[0][j]<<"~"<<B.X[1][j]<<"~"<<B.X[2][j]<<endl;
+    }
+    FILE.close();
 }
 
 void Solver::initSolver(int _l)
@@ -264,7 +350,55 @@ void Solver::initSolver(int _l)
     res.resize(_l);
     w.resize(_l);
     v.resize(_l);
-    g=C3(0,0,0,0,0,0);
-    rho=C3(0,0,0,0,0,0);
-    MAX_ITER=300;
+    g=C3(0.,0.,0.,0.,0.,0.);
+    rho=C3(0.,0.,0.,0.,0.,0.);
+    MAX_ITER=100;
+}
+
+//DO NOT USE THIS METHOD FOR THE DIRECT SOLVER SINCE THE MATRIX POINTER IS UNSTABLE
+//USE THE EXPLICIT METHOD BELOW
+R3 Solver::computeError(ErrorNorm norm)
+{
+    VectorC3 Ax;
+    A->MatVectMul(X,Ax);
+    VectorC3 ResComp = Ax-B;
+    if (norm==ErrorNorm::infinity)
+        return(R3(ResComp.X[0].linfty(),ResComp.X[1].linfty(),ResComp.X[2].linfty()));
+    else if (norm==ErrorNorm::L1)
+        return (R3(ResComp.X[0].l1(),ResComp.X[1].l1(),ResComp.X[2].l1()));
+    else if (norm==ErrorNorm::L2)
+        return (R3(ResComp.X[0].l2(),ResComp.X[1].l2(),ResComp.X[2].l2()));
+    else
+    {
+        cout<<"Norme de l'erreur mal définie."<<endl;
+        return R3(-1,-1,-1);
+    }
+}
+
+R3 Solver::computeError(MatSparseC3 _A, VectorC3 _B,ErrorNorm norm)
+{
+    VectorC3 Ax;
+    _A.MatVectMul(X,Ax);
+    VectorC3 ResComp = Ax-_B;
+    if (norm==ErrorNorm::infinity)
+        return(R3(ResComp.X[0].linfty(),ResComp.X[1].linfty(),ResComp.X[2].linfty()));
+    else if (norm==ErrorNorm::L1)
+        return (R3(ResComp.X[0].l1(),ResComp.X[1].l1(),ResComp.X[2].l1()));
+    else if (norm==ErrorNorm::L2)
+        return (R3(ResComp.X[0].l2(),ResComp.X[1].l2(),ResComp.X[2].l2()));
+    else
+    {
+        cout<<"Norme de l'erreur mal définie."<<endl;
+        return R3(-1,-1,-1);
+    }
+}
+
+void Solver::displaySolution()
+{
+    cout<<"Solution sur X : "<<endl;
+    cout<<X.X[0]<<endl;
+    cout<<"Solution sur Y : "<<endl;
+    cout<<X.X[1]<<endl;
+    cout<<"Solution sur Z : "<<endl;
+    cout<<X.X[2]<<endl;
 }

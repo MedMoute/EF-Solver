@@ -28,7 +28,7 @@ VectorC3::VectorC3(ifstream &fd)
                         for(unsigned int j=0; j!=line.size(); ++j)
                             nspace+=( line.at(j)==' ');
                         int ntmp = nspace+1 ;
-                      //  cout<<line<<": Nb espaces = "<<ntmp<<endl;
+                        //  cout<<line<<": Nb espaces = "<<ntmp<<endl;
                         if (ntmp==6)
                         {
                             double* tmp = new double[ntmp] ;
@@ -48,7 +48,7 @@ VectorC3::VectorC3(ifstream &fd)
                             X[0][i]=C(tmp[0],tmp[3]);
                             X[1][i]=C(tmp[1],tmp[4]);
                             X[2][i]=C(tmp[2],tmp[5]);
-                        //    cout<<X[0][i]<<"  -   "<<X[1][i]<<"   -   "<<X[2][i]<<endl;
+                            //    cout<<X[0][i]<<"  -   "<<X[1][i]<<"   -   "<<X[2][i]<<endl;
                         }
                     }
                 }
@@ -293,7 +293,7 @@ int MatSparseC3::DiagMatMul(MatDiag W)
     }
 }
 void MatSparseC3::MatVectMul(VectorC3 & _X, VectorC3 &_o,int _comp)
-{
+const{
     if(_X.size()==size)
     {
         int i,k,j;
@@ -305,12 +305,24 @@ void MatSparseC3::MatVectMul(VectorC3 & _X, VectorC3 &_o,int _comp)
                 for (i=0;i<size;i++)
                 {
                     (_o.X[j])[i]=(0,0);
-                    for(k=P[i];k<min(long(P[i+1]),J.size());k++)
+                    if (i==size-1) // case change because P[i+1] is not defined in that case
+
                     {
-                        //Debug for insertions
-                        //cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
-                        (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                        for(k=P[i];k<J.size();k++)
+                        {
+                            (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                        }
                     }
+                    else
+                    {
+                        for(k=P[i];k<long(P[i+1]);k++)
+                        {
+                            (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                        }
+                        //Debug for insertions
+                       // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
+                    }
+
                 }
             }
         }
@@ -321,9 +333,23 @@ void MatSparseC3::MatVectMul(VectorC3 & _X, VectorC3 &_o,int _comp)
             for (i=0;i<size;i++)
             {
                 (_o.X[j])[i]=(0,0);
-                for(k=P[i];k<min(long(P[i+1]),J.size());k++)
+
+                if (i==size-1) // case change because P[i+1] is not defined in that case
+
                 {
-                    _o.X[j][i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                    for(k=P[i];k<J.size();k++)
+                    {
+                        (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                    }
+                }
+                else
+                {
+                    for(k=P[i];k<long(P[i+1]);k++)
+                    {
+                        (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
+                    }
+                    //Debug for insertions
+                   // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
                 }
             }
         }

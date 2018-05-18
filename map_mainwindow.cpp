@@ -1,10 +1,18 @@
-#include <QFileDialog>
 #include <chrono>
 
-#include "utils.h"
+#include <QFileDialog>
+#include <QDir>
+#include <QtWidgets/QMessageBox>
+#include <QtGui/QScreen>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 #include "map_mainwindow.h"
 #include "ui_map_mainwindow.h"
 #include "C3.h"
+
+#include "viewer3d.h"
+#include "scatterdatamodifier.h"
 
 MAP_MainWindow::MAP_MainWindow(QWidget *parent) :
     QWidget(parent),
@@ -17,11 +25,13 @@ MAP_MainWindow::MAP_MainWindow(QWidget *parent) :
     maillage=0;
     problem=0;
     solver=0;
+    m_meshVector=new vector<Triangle>;
 }
 
 MAP_MainWindow::~MAP_MainWindow()
 {
     delete ui;
+    delete m_meshVector;
 }
 
 void MAP_MainWindow::on_pushButton_load_BC_released()
@@ -46,10 +56,6 @@ void MAP_MainWindow::on_pushButton_load_BC_released()
         auto end_time = std::chrono::system_clock::now();
         auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
         std::cout<<"Chargement du fichier des conditions aux bord : "<<fileName.toStdString()<<" effectue en "<<elapsed_seconds<<"s."<<std::endl;
-        if (bc->GetSize()>0 || bc->GetExpr()[0].size()>0)
-        {
-            ui->radioButton_homogeneous->setChecked(false);
-        }
     }
 }
 
@@ -63,7 +69,6 @@ void MAP_MainWindow::on_pushButton_load_3D_released()
     if (bc!=0)
     {
         delete bc;
-        ui->radioButton_homogeneous->setChecked(true);
     }
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
@@ -92,6 +97,7 @@ void MAP_MainWindow::on_pushButton_load_3D_released()
         ui->pushButton_mat_assemb->setEnabled(true);
         ui->pushButton_load_BC->setEnabled(true);
         ui->pushButton_load_RHS->setEnabled(true);
+        ui->pushButton_vis_3D->setEnabled(true);
     }
 }
 
@@ -133,7 +139,7 @@ void MAP_MainWindow::on_pushButton_mat_assemb_released()
     //DisplayElementaryStiffnessMatrix(m_ptr->begin()->first);
     int op=ui->comboBox_problem->currentIndex();
 
-    problem = new FEProblem(maillage,rhs,bc,op);
+    problem = new FEProblem(maillage,rhs,bc,op,ui->checkBox_unitary->isChecked());
 
     ui->pushButton_solve->setEnabled(true);
     ui->checkBox_dir->setEnabled(true);
@@ -143,11 +149,14 @@ void MAP_MainWindow::on_pushButton_mat_assemb_released()
 
 void MAP_MainWindow::on_pushButton_solve_released()
 {
+
     util::print_separator();
     cout<<"Lancement de la routine de resolution du probleme."<<endl;
     solver = new Solver(problem,SolverMethod(ui->comboBox_solver->currentIndex()+1),0.0000001);
-    if (solver->GetRes()==1)
-        ui->pushButton_save_output->setEnabled(true);
+
+    ui->pushButton_save_output->setEnabled(true);
+
+cout<<"Erreur finale : "<<solver->computeError()<<endl;
 }
 
 void MAP_MainWindow::on_pushButton_load_Mat_released()
@@ -169,8 +178,8 @@ void MAP_MainWindow::on_pushButton_load_Mat_released()
 
     cout<<"Chargement direct du second membre du systeme lineaire"<<endl;
     fileName = QFileDialog::getOpenFileName(this, tr("Open Vector File"),
-                                                    "",
-                                                    tr("Vector Data File (*.vec);;Any files(*)"));
+                                            "",
+                                            tr("Vector Data File (*.vec);;Any files(*)"));
     FILE.open(fileName.toStdString().c_str(), std::ios::in);
 
     if (FILE.fail())
@@ -186,13 +195,60 @@ void MAP_MainWindow::on_pushButton_load_Mat_released()
     ui->comboBox_solver->setEnabled(true);
 
     solver = new Solver(mat,vec,SolverMethod(ui->comboBox_solver_2->currentIndex()+1),0.00001);
-
-    if (solver->GetRes()==1)
-        ui->pushButton_save_output->setEnabled(true);
+    cout<<"Erreur finale : "<<solver->computeError(mat,vec)<<endl;
+    solver->displaySolution();
 }
 
 void MAP_MainWindow::on_pushButton_save_output_released()
 {
-//Open dialog in order to save the Output vector
+    //Open dialog in order to save the Output vector
 
 }
+
+void MAP_MainWindow::on_pushButton_vis_3D_released()
+{
+    if (maillage)
+    {
+        string path = (QDir::currentPath()+"tmp.obj").toStdString();
+        int res = maillage->ExportMeshAsOBJFile(path);
+        if (res==0)
+        {
+            Viewer3D* m_viewer3D = new Viewer3D(this);
+
+            CreateMeshBuffer();
+
+            m_viewer3D->sceneModifier()->addTriangleMeshCustomMaterial(QString::fromStdString(path),m_meshVector);
+            m_viewer3D->show();
+        }
+    }
+}
+
+void MAP_MainWindow::CreateMeshBuffer()
+{
+    map<int,std::tuple<int,int,int>>* face_m = maillage->GetFacesMap();
+    map<int,std::tuple<int,int,int>>::iterator face_it;
+    map<int,R3>* node_m = maillage->GetNodesMap();
+    map<int,R3>::iterator node_it;
+
+    for(face_it=face_m->begin();face_it!=face_m->end();++face_it)
+    {
+        Triangle tmp_tri;
+        int N1=std::get<0>((*face_it).second);
+        node_it =node_m->find(N1);
+        tmp_tri.vertices[0].p.setX((*node_it).second.X_());
+        tmp_tri.vertices[0].p.setY((*node_it).second.Y_());
+        tmp_tri.vertices[0].p.setZ((*node_it).second.Z_());
+        int N2=std::get<1>((*face_it).second);
+        node_it =node_m->find(N2);
+        tmp_tri.vertices[1].p.setX((*node_it).second.X_());
+        tmp_tri.vertices[1].p.setY((*node_it).second.Y_());
+        tmp_tri.vertices[1].p.setZ((*node_it).second.Z_());
+        int N3=std::get<2>((*face_it).second);
+        node_it =node_m->find(N3);
+        tmp_tri.vertices[2].p.setX((*node_it).second.X_());
+        tmp_tri.vertices[2].p.setY((*node_it).second.Y_());
+        tmp_tri.vertices[2].p.setZ((*node_it).second.Z_());
+        m_meshVector->push_back(tmp_tri);
+    }
+}
+

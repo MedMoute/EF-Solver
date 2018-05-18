@@ -64,6 +64,7 @@ public :
     Maillage3D(ifstream& file);
 
      vector<int>* GetPartitionsMap(){return partitions;}
+     map<int,int>* GetPartitionDataMap(){return elements_partition;}
      map<int,R3>* GetNodesMap(){return nodes;}
      map<int,R3>* GetBoundaryNodesMap(){return boundary_nodes;}
      map<int,tuple<int,int,int,int>>* GetElementsMap(){return elements;}
@@ -72,6 +73,9 @@ public :
      map<int,set<int>*>* GetNeighboursFacesMap() {return neighbors_faces;}
      map<int,tuple<int,int,int>>* GetFacesMap() {return faces;}
      map<int,tuple<int,int,int>>* GetBoundaryFacesMap() {return faces_bord;}
+     map<int,pair<int,int>>* GetTrianglesInterfaceMap() {return triangles_interfaces;}
+     map<int,tuple<int,int,int>>* GetTrianglesNodesInterfaceMap() {return triangles_interfaces_nodes;}
+
 
     int GetPartitionSize(int part);
     int GetElementsSize(){return elements->size();}
@@ -88,13 +92,16 @@ public :
     int GetElementsFourthNodeIndex(int tetr){return get<3>(elements->at(tetr));}
 
     void DisplayInterfacesElements();
+    void DisplayInterfacesTriangles();
     void DisplayBoundaryElements();
     void DisplayBasicData();
 
     //Methode d'extraction des triangles depuis les elements : boucle double sur les elements proches et recherche de O(N²) VALEURS dans des maps
     // Opération critique pour le pré-traitement du maillage
-    // Envisager de modifier la méthode avec boost et une map multi-indexée pour amélioerer les perfs de la recherche
+    // Envisager de modifier la méthode avec boost et une map multi-indexée pour améliorer les perfs de la recherche
     void CreateInterfaceTriangles();
+
+    int ExportMeshAsOBJFile(string FilePath,bool verbose=0);
 
     pair<bool,tuple<int,int,int>> CommonTriangle (tuple<int,int,int,int>,tuple<int,int,int,int>);
 

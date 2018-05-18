@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>240</width>
+    <width>236</width>
     <height>370</height>
    </rect>
   </property>
@@ -243,17 +243,12 @@
    </item>
    <item>
     <property name="text">
-     <string>OrthoDir</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>GMRES</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
      <string>MinRes</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>OrthoDir</string>
     </property>
    </item>
   </widget>
@@ -302,25 +297,6 @@
     <string>Load BC Data ...</string>
    </property>
   </widget>
-  <widget class="QRadioButton" name="radioButton_homogeneous">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>160</y>
-     <width>141</width>
-     <height>18</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Homogeneous Problem</string>
-   </property>
-   <property name="checked">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pushButton_load_Mat">
    <property name="geometry">
     <rect>
@@ -366,19 +342,43 @@
    </item>
    <item>
     <property name="text">
-     <string>OrthoDir</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>GMRES</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
      <string>MinRes</string>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>OrthoDir</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QPushButton" name="pushButton_vis_3D">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>10</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Vis3D</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox_unitary">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>150</y>
+     <width>151</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Unitary problem</string>
+   </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

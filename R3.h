@@ -41,6 +41,7 @@ public:
         Z /= k;
         return  *this;}
 
+
     bool operator==(R3 P)const{
         if (X==P.X_() && Y==P.Y_() && Z==P.Z_())
             return true;
@@ -48,22 +49,27 @@ public:
     }
 
     //Opérateurs binaires (+,-,*,/,PS(,))
-    R3 operator+(R3 & P) {
+    R3 operator+(const R3 & P) {
         return(R3(X+P.X_(),Y+P.Y_(),Z+P.Z_()));}
-    R3 operator-(R3 & P) {
+    R3 operator-(const R3 & P) {
         return(R3(X-P.X_(),Y-P.Y_(),Z-P.Z_()));}
-    R3 operator*(R & k) {
+    R3 operator*(const R & k) {
         return(R3(k*X,k*Y,k*Z));}
-    R3 operator/(R & k){
+    R3 operator*(const R3 & P){
+        return(R3(X*P.X_(),Y*P.Y_(),Z*P.Z_()));}
+    R3 operator/(const R & k){
         return(R3(k/X,k/Y,k/Z));}
-
-    R operator, (R3 & P) {
+    R3 operator/(const R3 & P){
+        return(R3(X/P.X_(),Y/P.Y_(),Z/P.Z_()));}
+    R operator, (const R3 & P) {
         return(R(X*P.X_()+Y*P.Y_()+Z*P.Z_()));}
 
     //Opérateurs unaires(+(Identité),-(Négatif),*(Conjugate))
     R3 operator+()const {return *this;}
 
     R3 operator-()const {return R3(-X,-Y,-Z);}
+
+    R3 sqrt_() const{return R3(sqrt(X),sqrt(Y),sqrt(Z));}
 
     //Operateur tableau : récupère les composantes dans l'ordre de construction
     R & operator[](int i) { //Operateur autorisant les modification
@@ -90,6 +96,9 @@ public:
 
     //Méthodes
 
+    R3 div_(const R3& P)const {
+        return(R3(X/P.X_(),Y/P.Y_(),Z/P.Z_()));
+    }
     //Récupération des composantes
     R comp(int i) const{
         if (i==1) return (R(X));
@@ -104,6 +113,8 @@ public:
     //Méthode pour obtenir les coefficients inverses
     R3 inv() const{return R3(1/X,1/Y,1/Z);}
 
+    double norm() const{return sqrt(X*X+Y*Y+Z*Z);}
+
     R X_()const{return X;}
     R Y_()const{return Y;}
     R Z_()const{return Z;}
@@ -111,5 +122,9 @@ private:
     //Membres
     R X,Y,Z; //on interdit l'accès direct aux données en dehors de la classe.
 };
-
+inline ostream & operator<<(ostream & f, R3 c)
+{
+f << c.X_() <<" // "<< c.Y_()<<" // "<< c.Z_() ;
+return f;
+}
 #endif // R3_H

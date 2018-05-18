@@ -61,3 +61,18 @@ double util::simplex3Mesure(R3 a,R3 b,R3 c,R3 d)
     double m3=p0_1.Z_()*p0_2.X_()*p0_3.Y_()-(p0_1.Y_()*p0_2.X_()*p0_3.Z_());
     return ((m1+m2+m3)/6.);
 }
+
+double util::simplex2Mesure(R3 a,R3 b,R3 c)
+{
+    //Using Heron formula
+    R3 p0_1=b-a;
+    R3 p0_2=c-a;
+    R3 p1_2=c-b;
+    double d0_1=p0_1.norm();
+    double d0_2=p0_2.norm();
+    double d1_2=p1_2.norm();
+
+    double s=(d0_1+d0_2+d1_2)/2;
+
+    return(sqrt(s*(s-d0_1)*(s-d0_2)*(s-d1_2)));
+}

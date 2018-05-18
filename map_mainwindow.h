@@ -11,6 +11,7 @@
 #include "bc.h"
 #include "feproblem.h"
 #include "solver.h"
+#include "utils.h"
 
 namespace Ui {
 class MAP_MainWindow;
@@ -23,6 +24,7 @@ class MAP_MainWindow : public QWidget
 public:
     explicit MAP_MainWindow(QWidget *parent = 0);
 
+    void CreateMeshBuffer();
     void AssembleAll();
     ~MAP_MainWindow();
 
@@ -34,6 +36,7 @@ public slots:
     void on_pushButton_solve_released();
     void on_pushButton_load_Mat_released();
     void on_pushButton_save_output_released();
+    void on_pushButton_vis_3D_released();
 private:
     Ui::MAP_MainWindow *ui;
     Maillage3D *maillage;
@@ -41,6 +44,7 @@ private:
     BC *bc;
     FEProblem *problem;
     Solver *solver;
+    vector<Triangle>* m_meshVector;
 };
 
 #endif // MAP_MAINWINDOW_H

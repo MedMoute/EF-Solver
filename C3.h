@@ -83,12 +83,16 @@ public:
     //Vectorial operations are done COMPONENT-WISE
     C3 operator* (C3 P) {
         return(C3(C(X*P.X_()),C(Y*P.Y_()),C(Z*P.Z_())));}
+    C3 operator* (R3 P) {
+        return(C3(C(X*P.X_()),C(Y*P.Y_()),C(Z*P.Z_())));}
     C3 operator/(const R k){
         return(C3((1/k)*X.real(),(1/k)*Y.real(),(1/k)*Z.real(),(1/k)*X.imag(),(1/k)*Y.imag(),(1/k)*Z.imag()));}
     C3 operator/( C k) {
         return(C3(C(X/k),C(Y/k),C(Z/k)));}
     //Vectorial operations are done COMPONENT-WISE
     C3 operator/ (C3 P)const{
+        return(C3(C(X/P.X_()),C(Y/P.Y_()),C(Z/P.Z_())));}
+    C3 operator/ (R3 P)const{
         return(C3(C(X/P.X_()),C(Y/P.Y_()),C(Z/P.Z_())));}
 
     // Attention le produit scalaire dans C3 (donc hermitien) n'est PAS commutatif
@@ -127,6 +131,9 @@ public:
             exit(1);
         }
     }
+    const R3 sq_v_norm()
+    {return R3(X.real()*X.real()+X.imag()*X.imag(),Y.real()*Y.real()+Y.imag()*Y.imag(),Z.real()*Z.real()+Z.imag()*Z.imag());}
+
     const R3 v_norm()
     {return R3(sqrt(X.real()*X.real()+X.imag()*X.imag()),sqrt(Y.real()*Y.real()+Y.imag()*Y.imag()),sqrt(Z.real()*Z.real()+Z.imag()*Z.imag()));}
     //Méthodes

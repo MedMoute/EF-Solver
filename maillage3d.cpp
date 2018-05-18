@@ -2,6 +2,9 @@
 #include "utils.h"
 
 #include <chrono>
+#include <QString>
+#include <QDateTime>
+#include <Qt3DRender/QMesh>
 
 
 
@@ -373,6 +376,8 @@ Maillage3D::Maillage3D(ifstream& fd)
     //On ajoute le traitement des interfaces et la création des structures de triangles posés sur les interfaces
     if (partitions->size()>1)
         CreateInterfaceTriangles();
+
+    DisplayInterfacesTriangles();
 }
 
 int Maillage3D::GetPartitionSize( int _part)
@@ -605,6 +610,36 @@ void Maillage3D::DisplayInterfacesElements()
     util::print_separator();
 }
 
+void Maillage3D::DisplayInterfacesTriangles()
+{
+    util::print_separator();
+    cout<<"Triangles poses sur des interfaces : "<<endl;
+    cout<<triangles_interfaces->size()<<" triangles poses sur les interfaces dans le maillage"<<endl;
+    int i,j;
+    int part_i,part_j;
+    for (i=0;i<partitions->size();i++)
+    {
+        part_i=partitions->at(i);
+        for (j=0;j<partitions->size();j++)
+        {
+            part_j=partitions->at(j);
+            if (part_i!=part_j)
+            {
+                map<int,pair<int,int>>::iterator it;
+                cout<<"Interface "<<part_i<<"/"<<part_j<<":"<<endl;
+                //Parcours des éléments à proximité d'une interface et recherche de l'interface en cours
+                for (it = triangles_interfaces->begin(); it != triangles_interfaces->end(); ++it )
+                    if (it->second == pair<int,int>(part_i,part_j))
+                    {
+                        cout<<it->first<<" -";
+                    }
+            }
+        }
+        cout<<endl;
+    }
+    util::print_separator();
+}
+
 void Maillage3D::DisplayBasicData()
 {
 
@@ -615,6 +650,55 @@ void Maillage3D::DisplayBasicData()
     cout<<"* "<<this->GetElementsSize() <<" elements"<<endl;
     cout<<"On a trouve "<<triangles_interfaces->size()<<" triangles poses sur des interfaces"<<endl;
 
+}
+
+int Maillage3D::ExportMeshAsOBJFile(string filepath, bool verbose)
+{
+    //Debug >Output
+    verbose=0;
+    util::print_separator();
+
+    cout<<"Exporting Mesh File as "<<filepath<<".";
+    std::ofstream FILE;
+
+    FILE.open(filepath.c_str(), std::ios::out);
+    if (FILE.fail())
+    {
+        std::cout<<"Erreur lors de l'ouverture de FILE"<<std::endl;
+        return 1;
+    }
+    else // Working out FILE : dumping output
+    {
+        FILE<<"#File Generated on "<<QDateTime::currentDateTime().toString().toStdString()<<" by EF-Solver.MeshToObj"<<endl;
+        if (verbose)         cout<<"#File Generated on "<<QDateTime::currentDateTime().toString().toStdString()<<" by EF-Solver.MeshToObj"<<endl;
+
+        map<int,R3>::iterator node_it;
+        map<int,tuple<int,int,int>>::iterator face_it;
+        for (node_it=GetBoundaryNodesMap()->begin();node_it!=GetBoundaryNodesMap()->end();++node_it)
+        {
+            FILE<<"v ";
+            FILE<<(*node_it).second.X_()<<" "<<(*node_it).second.Y_()<<" "<<(*node_it).second.Z_()<<endl;
+
+            if (verbose)
+            {
+                cout<<"v ";
+                cout<<(*node_it).second.X_()<<" "<<(*node_it).second.Y_()<<" "<<(*node_it).second.Z_()<<endl;
+            }
+        }
+        for(face_it=GetBoundaryFacesMap()->begin();face_it!=GetBoundaryFacesMap()->end();++face_it)
+        {
+            FILE<<"f ";
+            FILE<<std::get<0>((*face_it).second)<<" "<<std::get<1>((*face_it).second)<<" "<<std::get<2>((*face_it).second)<<endl;
+            if (verbose)
+            {
+                cout<<"f ";
+                cout<<std::get<0>((*face_it).second)<<" "<<std::get<1>((*face_it).second)<<" "<<std::get<2>((*face_it).second)<<endl;
+            }
+        }
+        FILE.close();
+    }
+
+    return 0;
 }
 
 Maillage3D::~Maillage3D()

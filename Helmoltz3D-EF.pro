@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui 3dcore 3drender 3dinput 3dextras datavisualization
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -62,7 +62,13 @@ SOURCES += main.cpp \
     bc.cpp \
     feproblem.cpp \
     MatSparseC3.cpp \
-    solver.cpp
+    solver.cpp \
+    orbittransformcontroller.cpp \
+    viewer3d.cpp \
+    scenemodifier.cpp \
+    trianglemeshrenderer.cpp \
+    scatterdatamodifier.cpp \
+    parametersdialog.cpp
 
 HEADERS += \
     maillage3d.h \
@@ -128,10 +134,17 @@ HEADERS += \
     R3.h \
     R2.h \
     MatSparseC3.h \
-    solver.h
+    solver.h \
+    orbittransformcontroller.h \
+    viewer3d.h \
+    scenemodifier.h \
+    trianglemeshrenderer.h \
+    scatterdatamodifier.h \
+    parametersdialog.h
 
 CONFIG += c++11
 
 FORMS += \
-    map_mainwindow.ui
+    map_mainwindow.ui \
+    parametersdialog.ui
 

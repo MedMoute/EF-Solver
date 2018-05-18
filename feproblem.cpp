@@ -1,10 +1,11 @@
 #include "feproblem.h"
 #include "C3.h"
 #include "utils.h"
+#include "ui_parametersdialog.h"
 
 #include <chrono>
 
-FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op):maillage(_maillage),op(_op)
+FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit):maillage(_maillage),op(_op),unitary(_unit)
 {
     A = new MatSparseC3;
     util::print_separator();
@@ -116,20 +117,46 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op):maillage(_
     case 0 :
     {
         cout<<"Construction de l'operateur pour l'equiation de Poisson"<<endl;
-        BuildPoissonOperator();
+        if(unitary)
+            BuildPoissonOperator();
+        else//Parametrized problem
+        {
+            //Open dialog.
+            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog->show();
+            QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
+        }
+
         break;
     }
 
     case 1 :
     {
         cout<<"Construction de l'operateur pour l'equation de Helmholtz"<<endl;
-        BuildHelmholtzOperator();
+        if(unitary)
+            BuildHelmholtzOperator();
+        else//Parametrized problem
+        {
+            //Open dialog.
+            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog->show();
+            QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
+        }
+
         break;
     }
     case 2 :
     {
         cout<<"Construction de l'operateur pour l'equiation de la chaleur stationnaire"<<endl;
-        BuildHeatOperator();
+        if(unitary)
+            BuildHeatOperator();
+        else//Parametrized problem
+        {
+            //Open dialog.
+            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog->show();
+            QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
+        }
         break;
     }
     default:
@@ -352,7 +379,7 @@ C3 FEProblem::CalcIntOnTetrahedron(Maillage3D* _maillage,RHS* _rhs,int _idx,int 
                 val_v_g[(i+3)%4]=0.1381966011250105;
             }
         }
-        res =(val_g[0]*val_v_g[0]+val_g[1]*val_v_g[1]+val_g[2]*val_v_g[2]+val_g[3]*val_v_g[3])*(1/(6*4));
+        res =(val_g[0]*val_v_g[0]+val_g[1]*val_v_g[1]+val_g[2]*val_v_g[2]+val_g[3]*val_v_g[3])*(1./(6.*4.));
         //cout<<"Node "<<_idx<<"+="<<res.comp(1)<<";"<<res.comp(2)<<";"<<res.comp(3)<<";"<<endl;
     }
     return res;
@@ -515,8 +542,6 @@ void FEProblem::BuildPoissonOperator()
             for(j=0;j<4;j++)
             {
                 A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
-                //For "safety, fill the other components for now
-                // Check if there is overlap in the data -> might create erroneous operator
                 A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
                 A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
             }
@@ -529,6 +554,117 @@ void FEProblem::BuildPoissonOperator()
     std::cout<<"Constuction de l'operateur de Laplace : effectue en "<<elapsed_seconds<<"s."<<std::endl;
 }
 
+void FEProblem::BuildParameterPoissonOperator(double lambda)
+{
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+    R3 pos[4];
+    int i,j;
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*abs(V)*(1+util::kron(i,j))/20,0);
+            }
+        }
+        //Debug :
+        //DisplayElementaryMassMatrix(n_elem);
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de Laplace : effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
+void FEProblem::BuildPartitionnedParameterPoissonOperator(std::map<int,double> lambdas,std::map<int,int>* partition_data)
+{
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+    R3 pos[4];
+    int i,j;
+    int part;
+    double elem_data;
+    map<int,int>::iterator part_it;
+    map<int,double>::iterator part_val_it;
+
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        //Get the partition index of the current element :
+        part_it= partition_data->find(n_elem);
+        part=(*part_it).second;
+        //find the data corresponding to the partition
+
+        for(part_val_it=lambdas.begin();part_val_it!=lambdas.end();++part_val_it)
+        {
+            if((*part_val_it).first ==part)
+                elem_data=(*part_val_it).second;
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+            }
+        }
+        //Debug :
+        //DisplayElementaryMassMatrix(n_elem);
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de Laplace : effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
 //Construction de l'opérateur de la Chaleur Stationnaire en
 //utilisant la matrice de rigidité du système
 void FEProblem::BuildHeatOperator()
@@ -588,7 +724,443 @@ void FEProblem::BuildHeatOperator()
     std::cout<<"Constuction de l'operateur de la Chaleur Stationnaire : effectue en "<<elapsed_seconds<<"s."<<std::endl;
 }
 
+void FEProblem::BuildParameterHeatOperator(double lambda)
+{
+
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos[4];
+    int i,j;
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(lambda*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de la Chaleur Stationnaire : effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
+void FEProblem::BuildPartitionnedParameterHeatOperator(std::map<int, double> lambdas,std::map<int,int>* partition_data)
+{
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos[4];
+    int i,j;
+    int part;
+    double elem_data;
+    map<int,int>::iterator part_it;
+    map<int,double>::iterator part_val_it;
+
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+        //Get the partition index of the current element :
+        part_it= partition_data->find(n_elem);
+        part=(*part_it).second;
+        //find the data corresponding to the partition
+
+        for(part_val_it=lambdas.begin();part_val_it!=lambdas.end();++part_val_it)
+        {
+            if((*part_val_it).first ==part)
+                elem_data=(*part_val_it).second;
+        }
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(elem_data*(a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de la Chaleur Stationnaire : effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
 void FEProblem::BuildHelmholtzOperator()
 {
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos[4];
+    int i,j;
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(abs(V)*(1+util::kron(i,j))/20,0);
+            }
+        }
+        //Add the stiffness part
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de Helmholz: effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
+void FEProblem::BuildParameterHelmholtzOperator(double omega)
+{
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos[4];
+    int i,j;
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C(omega*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C(omega*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C(omega*abs(V)*(1+util::kron(i,j))/20,0);
+            }
+        }
+        //Add the stiffness part
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+
+    }
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de Helmholz: effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
+void FEProblem::BuildPartitionnedParameterHelmholtzOperator(std::map<int,double> omegas,std::map<int,int>* partition_data)
+{
+    //Timer start
+    auto start_time = std::chrono::system_clock::now();
+
+    map<int,tuple<int,int,int,int>>::iterator m_it;
+    map<int,R3>::iterator m_pos_it;
+    map<int,R3>* m_pos_ptr = maillage->GetNodesMap();
+    int n_elem;
+    int nodes[4];
+    int nodes_tri[3];
+    double a[4];
+    double b[4];
+    double c[4];
+    R3 pos_tri[3];
+    R3 pos[4];
+    int i,j;
+
+    int part;
+    double elem_data;
+    map<int,int>::iterator part_it;
+    map<int,double>::iterator part_val_it;
+
+    for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
+    {
+        n_elem=m_it->first;
+        tuple<int,int,int,int> elem = m_it->second;
+        nodes[0]=get<0>(elem);
+        nodes[1]=get<1>(elem);
+        nodes[2]=get<2>(elem);
+        nodes[3]=get<3>(elem);
+
+        for  (i=0;i<4;i++)
+        {
+            m_pos_it = m_pos_ptr->find(nodes[i]);
+            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+            {
+                pos[i]=m_pos_it->second;
+            }
+        }
+
+        //Get the partition index of the current element :
+        part_it= partition_data->find(n_elem);
+        part=(*part_it).second;
+        //find the data corresponding to the partition
+
+        for(part_val_it=omegas.begin();part_val_it!=omegas.end();++part_val_it)
+        {
+            if((*part_val_it).first ==part)
+                elem_data=(*part_val_it).second;
+        }
+
+        double V=util::simplex3Mesure(pos[0],pos[1],pos[2],pos[3]);
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]-=C(elem_data*elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]-=C(elem_data*elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]-=C(elem_data*elem_data*abs(V)*(1+util::kron(i,j))/20,0);
+            }
+        }
+        //Add the stiffness part
+        for(i=0;i<4;i++)
+        {
+            a[i]=(pos[(i+1)%4].Y_()-pos[(i+3)%4].Y_())*pos[(i+2)%4].Z_();
+            b[i]=(pos[(i+3)%4].X_()*pos[(i+1)%4].Z_())-(pos[(i+1)%4].X_()*pos[(i+3)%4].Z_());
+            c[i]=(pos[(i+3)%4].Y_()-pos[(i+1)%4].Y_())*pos[(i+2)%4].X_();
+        }
+        for(i=0;i<4;i++)
+        {
+            for(j=0;j<4;j++)
+            {
+                A->GetData().X[0][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[1][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+                A->GetData().X[2][A->IdxSearch(nodes[i],nodes[j])]+=C((a[i]*a[j]+b[i]*b[j]+c[i]*c[j])/(abs(V)*36.),0);
+            }
+        }
+    }
+    //Add the interface part: we use another loop on the smaller map : triangles_interfaces et triangles_interfaces_nodes
+    map<int,pair<int,int>>::iterator it;
+    int tri;
+    int part_i,part_j;
+    std::map<int,double>::iterator m_part_it ;
+    std::map<int,double>::iterator m_o_part_it;
+    std::map<int,pair<int,int>>::iterator t_it;
+    std::map<int,tuple<int,int,int>>::iterator t_n_it;
+    for (i=0;i<maillage->GetPartitionsMap()->size();i++)
+    {
+        part_i=maillage->GetPartitionsMap()->at(i);
+        for (j=0;j<maillage->GetPartitionsMap()->size();j++)
+        {
+            part_j=maillage->GetPartitionsMap()->at(j);
+            if (part_i!=part_j)
+            {
+                // Interface part_i/part_j
+
+                m_part_it = omegas.find(part_i);
+                m_o_part_it = omegas.find(part_j);
+                elem_data=(*m_part_it).second-(*m_o_part_it).second;
+
+                //Parcours des éléments triangles sur l'interface en cours
+                for (t_it = maillage->GetTrianglesInterfaceMap()->begin(); t_it != maillage->GetTrianglesInterfaceMap()->end(); ++t_it )
+                {
+                    if (t_it->second == pair<int,int>(part_i,part_j))
+                    {
+                        tri = t_it->first;
+                        //We now have obtained a triangle that is on the interface between part_i and part_j.
+                        // We'll get the positions of its nodes
+
+                        t_n_it = maillage->GetTrianglesNodesInterfaceMap()->find(tri);
+                        tuple<int,int,int> tri = t_n_it->second;
+                        nodes_tri[0]=get<0>(tri);
+                        nodes_tri[1]=get<1>(tri);
+                        nodes_tri[2]=get<2>(tri);
+
+                        for  (i=0;i<3;i++)
+                        {
+                            m_pos_it = m_pos_ptr->find(nodes_tri[i]);
+                            if(m_pos_it!=m_pos_ptr->end())//Check if the node exists
+                            {
+                                pos_tri[i]=m_pos_it->second;
+                            }
+                        }
+                        double a=util::simplex2Mesure(pos[0],pos[1],pos[2]);
+                        for(i=0;i<3;i++)
+                        {
+                            for(j=0;j<3;j++)
+                            {
+                                A->GetData().X[0][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
+                                A->GetData().X[1][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
+                                A->GetData().X[2][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        cout<<endl;
+    }
+    util::print_separator();
+    auto end_time = std::chrono::system_clock::now();
+    auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
+    std::cout<<"Constuction de l'operateur de Helmholz: effectue en "<<elapsed_seconds<<"s."<<std::endl;
+}
+
+void FEProblem::ProcessParamData()
+{
+    //
+    bool global=dialog->GetUI()->radioButton_global->isChecked();
+    switch (op)
+    {
+    case 0 :
+    {
+        if (global)
+            BuildParameterPoissonOperator(dialog->GetUI()->doubleSpinBox->value());
+        else
+            BuildPartitionnedParameterPoissonOperator(dialog->GetData(),maillage->GetPartitionDataMap());
+
+    }
+
+    case 1 :
+    {
+        if (global)
+            BuildParameterHelmholtzOperator(dialog->GetUI()->doubleSpinBox->value());
+        else
+            BuildPartitionnedParameterHelmholtzOperator(dialog->GetData(),maillage->GetPartitionDataMap());
+    }
+    case 2 :
+    {
+        if (global)
+            BuildParameterHeatOperator(dialog->GetUI()->doubleSpinBox->value());
+        else
+            BuildPartitionnedParameterHeatOperator(dialog->GetData(),maillage->GetPartitionDataMap());
+    }
+    default:
+        break;
+    }
 
 }
