@@ -97,14 +97,14 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit)
             j++;
             if (j%100==0)
             {
-                cout<<"["<<int(i)*100/n->size()<<"%]"<<"Computing Gauss Integration of tetrahedron #"<<i<<"/"<<n->size()<<"."<<endl;
+                cout<<"["<<int(j)*100/n->size()<<"%]"<<"Computing Gauss Integration of tetrahedron #"<<j<<"/"<<n->size()<<"."<<endl;
             }
         }
         cout <<"RHS Member fully determined.Proceeding to next step."<<endl;
 
     }
     auto end_time = std::chrono::system_clock::now();
-
+cout<<unitary<<endl;
     auto elapsed_seconds = std::chrono::duration<float>(end_time-start_time).count();
     std::cout<<"Calcul du second membre et des conditions aux bord matricielles : effectue en "<<elapsed_seconds<<"s."<<std::endl;
     int p=1;
@@ -122,7 +122,7 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit)
         else//Parametrized problem
         {
             //Open dialog.
-            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog=new ParametersDialog(maillage->GetPartitionsMap(),op);
             dialog->show();
             QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
         }
@@ -138,7 +138,7 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit)
         else//Parametrized problem
         {
             //Open dialog.
-            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog=new ParametersDialog(maillage->GetPartitionsMap(),op);
             dialog->show();
             QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
         }
@@ -153,7 +153,7 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit)
         else//Parametrized problem
         {
             //Open dialog.
-            dialog=new ParametersDialog(maillage->GetPartitionsMap());
+            dialog=new ParametersDialog(maillage->GetPartitionsMap(),op);
             dialog->show();
             QObject::connect(dialog->GetUI()->pushButton_ok,SIGNAL(clicked()),this,SLOT(ProcessParamData()));
         }
@@ -162,7 +162,10 @@ FEProblem::FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit)
     default:
         break;
     }
-
+    //Debug of the matrix:
+    //if(unitary)
+    //A->DisplayToOutput_Scilab();
+    //VectorC3(F+G).DisplayToOutput_Scilab(2);
 }
 
 C3 FEProblem::CalcIntOnTriangle(Maillage3D* _maillage,BC* _bc,int _idx,int _tri_idx)
@@ -299,7 +302,7 @@ C3 FEProblem::CalcIntOnTetrahedron(Maillage3D* _maillage,RHS* _rhs,int _idx,int 
         tri_n_idx[0]=get<0>(elem->second);
         tri_n_idx[1]=get<1>(elem->second);
         tri_n_idx[2]=get<2>(elem->second);
-        tri_n_idx[4]=get<3>(elem->second);
+        tri_n_idx[3]=get<3>(elem->second);
 
         for (i=0;i<4;i++)
         {
@@ -362,7 +365,7 @@ C3 FEProblem::CalcIntOnTetrahedron(Maillage3D* _maillage,RHS* _rhs,int _idx,int 
             C3 val_n[3];
             for(i=0;i<4;i++)
             {
-                val_n[i]=data->at(tri_n_idx[i]);
+                val_n[i]=data->at(tri_n_idx[i]-1);
             }
             for(i=0;i<4;i++)
             {
@@ -1006,7 +1009,6 @@ void FEProblem::BuildPartitionnedParameterHelmholtzOperator(std::map<int,double>
     double elem_data;
     map<int,int>::iterator part_it;
     map<int,double>::iterator part_val_it;
-
     for(m_it=maillage->GetElementsMap()->begin();m_it!=maillage->GetElementsMap()->end();++m_it)
     {
         n_elem=m_it->first;
@@ -1063,6 +1065,7 @@ void FEProblem::BuildPartitionnedParameterHelmholtzOperator(std::map<int,double>
             }
         }
     }
+
     //Add the interface part: we use another loop on the smaller map : triangles_interfaces et triangles_interfaces_nodes
     map<int,pair<int,int>>::iterator it;
     int tri;
@@ -1084,6 +1087,8 @@ void FEProblem::BuildPartitionnedParameterHelmholtzOperator(std::map<int,double>
                 m_part_it = omegas.find(part_i);
                 m_o_part_it = omegas.find(part_j);
                 elem_data=(*m_part_it).second-(*m_o_part_it).second;
+                //Debug for partition parameters data acquisition
+                //cout<<"Partition "<<(*m_part_it).first<<"/"<<(*m_o_part_it).first<< "->  "<<elem_data<<endl;
 
                 //Parcours des éléments triangles sur l'interface en cours
                 for (t_it = maillage->GetTrianglesInterfaceMap()->begin(); t_it != maillage->GetTrianglesInterfaceMap()->end(); ++t_it )
@@ -1108,14 +1113,14 @@ void FEProblem::BuildPartitionnedParameterHelmholtzOperator(std::map<int,double>
                                 pos_tri[i]=m_pos_it->second;
                             }
                         }
-                        double a=util::simplex2Mesure(pos[0],pos[1],pos[2]);
+                        double a=util::simplex2Mesure(pos_tri[0],pos_tri[1],pos_tri[2]);
                         for(i=0;i<3;i++)
                         {
                             for(j=0;j<3;j++)
                             {
-                                A->GetData().X[0][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
-                                A->GetData().X[1][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
-                                A->GetData().X[2][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0,elem_data*abs(a)/8);
+                                A->GetData().X[0][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0.,elem_data*abs(a)/8.);
+                                A->GetData().X[1][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0.,elem_data*abs(a)/8.);
+                                A->GetData().X[2][A->IdxSearch(nodes_tri[i],nodes_tri[j])]-=C(0.,elem_data*abs(a)/8.);
                             }
                         }
                     }
@@ -1134,7 +1139,8 @@ void FEProblem::ProcessParamData()
 {
     //
     bool global=dialog->GetUI()->radioButton_global->isChecked();
-    switch (op)
+    bool _op=dialog->GetOP();
+    switch (_op)
     {
     case 0 :
     {
@@ -1142,7 +1148,7 @@ void FEProblem::ProcessParamData()
             BuildParameterPoissonOperator(dialog->GetUI()->doubleSpinBox->value());
         else
             BuildPartitionnedParameterPoissonOperator(dialog->GetData(),maillage->GetPartitionDataMap());
-
+        break;
     }
 
     case 1 :
@@ -1151,6 +1157,8 @@ void FEProblem::ProcessParamData()
             BuildParameterHelmholtzOperator(dialog->GetUI()->doubleSpinBox->value());
         else
             BuildPartitionnedParameterHelmholtzOperator(dialog->GetData(),maillage->GetPartitionDataMap());
+        break;
+
     }
     case 2 :
     {
@@ -1158,9 +1166,12 @@ void FEProblem::ProcessParamData()
             BuildParameterHeatOperator(dialog->GetUI()->doubleSpinBox->value());
         else
             BuildPartitionnedParameterHeatOperator(dialog->GetData(),maillage->GetPartitionDataMap());
+        break;
+
     }
     default:
         break;
     }
-
+    //Debug of the matrix:
+    //A->DisplayToOutput_Scilab();
 }

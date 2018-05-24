@@ -12,7 +12,7 @@ public:
     KN<C> X[3];
     VectorC3(){}
 
-    ~VectorC3(){X[0].destroy();X[1].destroy();X[2].destroy();}
+    ~VectorC3(){}
 
     VectorC3(KN<C> x,KN<C> y,KN<C> z){X[0]=x;X[1]=y;X[2]=z;}
     VectorC3(ifstream& file);
@@ -154,9 +154,12 @@ public:
     {
         C dp_0,dp_1,dp_2;
         dp_0 = (KN<C>(X[0]),(conj_KN_<C>(P.X[0])));
-        dp_1 = (KN<C>(X[1]),(KN<C>(P.X[1])));
-        dp_2 = (KN<C>(X[2]),(KN<C>(P.X[2])));
+        dp_1 = (KN<C>(X[1]),(conj_KN_<C>(P.X[1])));
+        dp_2 = (KN<C>(X[2]),(conj_KN_<C>(P.X[2])));
         return(C3(dp_0,dp_1,dp_2));}
+
+    void DisplayToOutput_Scilab(int comp=0);
+
 };
 
 typedef VectorC3 MatDiag;
@@ -180,6 +183,8 @@ public:
     KN<int> &GetJ() {return J;}
     KN<int> &GetP() {return P;}
     int GetSize() {return P.size();}
+
+    void DisplayToOutput_Scilab();
 private:
     VectorC3 C_data;
     KN<int> J;

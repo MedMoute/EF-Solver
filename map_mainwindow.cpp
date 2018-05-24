@@ -34,7 +34,7 @@ MAP_MainWindow::~MAP_MainWindow()
     delete m_meshVector;
 }
 
-void MAP_MainWindow::on_pushButton_load_BC_released()
+void MAP_MainWindow::on_pushButton_load_BC_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
@@ -59,7 +59,7 @@ void MAP_MainWindow::on_pushButton_load_BC_released()
     }
 }
 
-void MAP_MainWindow::on_pushButton_load_3D_released()
+void MAP_MainWindow::on_pushButton_load_3D_clicked()
 {
     //reset RHS and BC data
     if (rhs!=0)
@@ -91,8 +91,6 @@ void MAP_MainWindow::on_pushButton_load_3D_released()
         std::cout<<"Chargement du fichier "<<fileName.toStdString()<<" effectue en "<<elapsed_seconds<<"s."<<std::endl;
 
         maillage->DisplayBasicData();
-        maillage->DisplayBoundaryElements();
-
         ui->comboBox_problem->setEnabled(true);
         ui->pushButton_mat_assemb->setEnabled(true);
         ui->pushButton_load_BC->setEnabled(true);
@@ -101,7 +99,7 @@ void MAP_MainWindow::on_pushButton_load_3D_released()
     }
 }
 
-void MAP_MainWindow::  on_pushButton_load_RHS_released()
+void MAP_MainWindow::  on_pushButton_load_RHS_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                     "",
@@ -127,11 +125,10 @@ void MAP_MainWindow::  on_pushButton_load_RHS_released()
     }
 }
 
-void MAP_MainWindow::on_pushButton_mat_assemb_released()
+void MAP_MainWindow::on_pushButton_mat_assemb_clicked()
 {
     if (problem)
-        delete problem;
-
+        problem->ClearA();
     util::print_separator();
     cout<<"Lancement de la routine d'assemblage des Matrices"<<endl;
     //map<int,tuple<int,int,int,int>>* m_ptr = maillage->GetElementsMap();
@@ -142,12 +139,13 @@ void MAP_MainWindow::on_pushButton_mat_assemb_released()
     problem = new FEProblem(maillage,rhs,bc,op,ui->checkBox_unitary->isChecked());
 
     ui->pushButton_solve->setEnabled(true);
-    ui->checkBox_dir->setEnabled(true);
+    //ui->checkBox_dir->setEnabled(true);
+
     ui->checkBox_it->setEnabled(true);
     ui->comboBox_solver->setEnabled(true);
 }
 
-void MAP_MainWindow::on_pushButton_solve_released()
+void MAP_MainWindow::on_pushButton_solve_clicked()
 {
 
     util::print_separator();
@@ -159,7 +157,7 @@ void MAP_MainWindow::on_pushButton_solve_released()
 cout<<"Erreur finale : "<<solver->computeError()<<endl;
 }
 
-void MAP_MainWindow::on_pushButton_load_Mat_released()
+void MAP_MainWindow::on_pushButton_load_Mat_clicked()
 {
     util::print_separator();
     cout<<"Chargement direct d'une matrice Sparse"<<endl;
@@ -199,13 +197,13 @@ void MAP_MainWindow::on_pushButton_load_Mat_released()
     solver->displaySolution();
 }
 
-void MAP_MainWindow::on_pushButton_save_output_released()
+void MAP_MainWindow::on_pushButton_save_output_clicked()
 {
     //Open dialog in order to save the Output vector
 
 }
 
-void MAP_MainWindow::on_pushButton_vis_3D_released()
+void MAP_MainWindow::on_pushButton_vis_3D_clicked()
 {
     if (maillage)
     {

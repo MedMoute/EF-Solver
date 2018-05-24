@@ -25,7 +25,6 @@ public:
     int Solve_Orthodir();
     int Solve_GMRES();
     int Solve_MinRES();
-    int Solve_MinRES_2();
     //DO NOT USE THIS METHOD FOR THE DIRECT SOLVER SINCE THE MATRIX POINTER IS UNSTABLE
     //USE THE EXPLICIT METHOD BELOW
     R3 computeError(ErrorNorm norm=ErrorNorm::infinity);

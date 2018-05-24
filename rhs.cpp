@@ -10,7 +10,7 @@ RHS::RHS(ifstream& fd, map<int, R3> *node_data)
     if (node_data!=0)
     {
         rhs = new vector<C3>;
-        int size;
+        unsigned int size;
         vector<C>* rhsX= new vector<C>;
         vector<C>* rhsY= new vector<C>;
         vector<C>* rhsZ= new vector<C>;
@@ -53,7 +53,9 @@ RHS::RHS(ifstream& fd, map<int, R3> *node_data)
                         //The node <-> Value is explicitely given
                     {
                         getline(fd,line);//Go to next line : the data corresponds to the size of the vector
-                        fd>>size;
+                        size=stoi(line);
+                        cout<<size<<endl;
+                        cout<<node_data->size()<<endl;
                         if (size==node_data->size()) //Input Data size corresponds to the Mesh Data size
                         {
                             while(line.size()!=0)
@@ -65,7 +67,7 @@ RHS::RHS(ifstream& fd, map<int, R3> *node_data)
                                 for(unsigned int j=0; j!=line.size(); ++j)
                                     nspace+=( line.at(j)==' ');
                                 int ntmp = nspace+1 ;
-                                int* tmp = new int[ntmp] ;
+                                double* tmp = new double[ntmp] ;
                                 // on met les entiers dans les cases
                                 size_t spos ;
                                 size_t isize ;
@@ -82,7 +84,7 @@ RHS::RHS(ifstream& fd, map<int, R3> *node_data)
                                 // Check if ntmp=7 (n°noeud + six composantes)
                                 if(ntmp==7)
                                 {
-                                    //TODO
+                                    rhs->push_back(C3(tmp[1],tmp[2],tmp[3],tmp[4],tmp[5],tmp[6]));
                                 }
                                 else
                                 {

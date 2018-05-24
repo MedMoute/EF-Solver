@@ -1,0 +1,77 @@
+\hypertarget{class_f_e_problem}{}\section{F\+E\+Problem Class Reference}
+\label{class_f_e_problem}\index{F\+E\+Problem@{F\+E\+Problem}}
+Inheritance diagram for F\+E\+Problem\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_f_e_problem}
+\end{center}
+\end{figure}
+\subsection*{Public Slots}
+\begin{DoxyCompactItemize}
+\item 
+void {\bfseries Process\+Param\+Data} ()\hypertarget{class_f_e_problem_a39624db202a3e8eb5de7e23312852c03}{}\label{class_f_e_problem_a39624db202a3e8eb5de7e23312852c03}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries F\+E\+Problem} (\hyperlink{class_maillage3_d}{Maillage3D} $\ast$\+\_\+maillage, \hyperlink{class_r_h_s}{R\+HS} $\ast$\+\_\+rhs, \hyperlink{class_b_c}{BC} $\ast$\+\_\+bc, int \+\_\+op, bool \+\_\+unit)\hypertarget{class_f_e_problem_a2533222abf90fc2d04a4234a1014f297}{}\label{class_f_e_problem_a2533222abf90fc2d04a4234a1014f297}
+
+\item 
+void {\bfseries ClearA} ()\hypertarget{class_f_e_problem_a8cfe4ef4c62f979abddf7cbbf4eb865d}{}\label{class_f_e_problem_a8cfe4ef4c62f979abddf7cbbf4eb865d}
+
+\item 
+\hyperlink{class_c3}{C3} {\bfseries Calc\+Int\+On\+Triangle} (\hyperlink{class_maillage3_d}{Maillage3D} $\ast$\+\_\+maillage, \hyperlink{class_b_c}{BC} $\ast$\+\_\+bc, int idx, int tri\+\_\+idx)\hypertarget{class_f_e_problem_a0840b3f7f979205c10c6e0540fd351f3}{}\label{class_f_e_problem_a0840b3f7f979205c10c6e0540fd351f3}
+
+\item 
+\hyperlink{class_c3}{C3} {\bfseries Calc\+Int\+On\+Tetrahedron} (\hyperlink{class_maillage3_d}{Maillage3D} $\ast$\+\_\+maillage, \hyperlink{class_r_h_s}{R\+HS} $\ast$\+\_\+bc, int idx, int tetra\+\_\+idx)\hypertarget{class_f_e_problem_a488637fda62991b5f6e41ce6b6c67234}{}\label{class_f_e_problem_a488637fda62991b5f6e41ce6b6c67234}
+
+\item 
+void {\bfseries Build\+Poisson\+Operator} ()\hypertarget{class_f_e_problem_a93b43c73b15cd0fc2e794f8c9a95c3b4}{}\label{class_f_e_problem_a93b43c73b15cd0fc2e794f8c9a95c3b4}
+
+\item 
+void {\bfseries Build\+Parameter\+Poisson\+Operator} (double lambda)\hypertarget{class_f_e_problem_a88a0511cfde10f33442b0f31f0f4840e}{}\label{class_f_e_problem_a88a0511cfde10f33442b0f31f0f4840e}
+
+\item 
+void {\bfseries Build\+Partitionned\+Parameter\+Poisson\+Operator} (std\+::map$<$ int, double $>$ lambdas, std\+::map$<$ int, int $>$ $\ast$partition\+\_\+data)\hypertarget{class_f_e_problem_ae7f707511e3f03879a4c37de25af262f}{}\label{class_f_e_problem_ae7f707511e3f03879a4c37de25af262f}
+
+\item 
+void {\bfseries Build\+Heat\+Operator} ()\hypertarget{class_f_e_problem_a28324e797fb63c2eb6f1290961707c5c}{}\label{class_f_e_problem_a28324e797fb63c2eb6f1290961707c5c}
+
+\item 
+void {\bfseries Build\+Parameter\+Heat\+Operator} (double lambda)\hypertarget{class_f_e_problem_a7e5f1a4a65eb0d6aed9dbabf92bc0da8}{}\label{class_f_e_problem_a7e5f1a4a65eb0d6aed9dbabf92bc0da8}
+
+\item 
+void {\bfseries Build\+Partitionned\+Parameter\+Heat\+Operator} (std\+::map$<$ int, double $>$ lambdas, std\+::map$<$ int, int $>$ $\ast$partition\+\_\+data)\hypertarget{class_f_e_problem_a8f31694c860f6c4328435a03ba49a16f}{}\label{class_f_e_problem_a8f31694c860f6c4328435a03ba49a16f}
+
+\item 
+void {\bfseries Build\+Helmholtz\+Operator} ()\hypertarget{class_f_e_problem_abf351263b822451ef3a9e426c5a24fb3}{}\label{class_f_e_problem_abf351263b822451ef3a9e426c5a24fb3}
+
+\item 
+void {\bfseries Build\+Parameter\+Helmholtz\+Operator} (double omega)\hypertarget{class_f_e_problem_a47be6792b07ddfe598e9baab37b5d442}{}\label{class_f_e_problem_a47be6792b07ddfe598e9baab37b5d442}
+
+\item 
+void {\bfseries Build\+Partitionned\+Parameter\+Helmholtz\+Operator} (std\+::map$<$ int, double $>$ omegas, std\+::map$<$ int, int $>$ $\ast$partition\+\_\+data)\hypertarget{class_f_e_problem_a666ceb9dd40eb18d8f825e81a4946b96}{}\label{class_f_e_problem_a666ceb9dd40eb18d8f825e81a4946b96}
+
+\item 
+void {\bfseries Display\+Elementary\+Mass\+Matrix} (int n\+\_\+elem)\hypertarget{class_f_e_problem_a84a7d802bed7528c88c34ec7d7d9c243}{}\label{class_f_e_problem_a84a7d802bed7528c88c34ec7d7d9c243}
+
+\item 
+void {\bfseries Display\+Elementary\+Stiffness\+Matrix} (int n\+\_\+elem)\hypertarget{class_f_e_problem_a2c7f81c3c19f2084786c05fa62bb2a16}{}\label{class_f_e_problem_a2c7f81c3c19f2084786c05fa62bb2a16}
+
+\item 
+\hyperlink{class_vector_c3}{Vector\+C3} {\bfseries Get\+BC} ()\hypertarget{class_f_e_problem_ae35d33f28900ab65cfda40dadbc37032}{}\label{class_f_e_problem_ae35d33f28900ab65cfda40dadbc37032}
+
+\item 
+\hyperlink{class_vector_c3}{Vector\+C3} {\bfseries Get\+R\+HS} ()\hypertarget{class_f_e_problem_a8430129189603424a40ed0d5fe532cce}{}\label{class_f_e_problem_a8430129189603424a40ed0d5fe532cce}
+
+\item 
+\hyperlink{class_mat_sparse_c3}{Mat\+Sparse\+C3} $\ast$ {\bfseries GetA} ()\hypertarget{class_f_e_problem_ab8d3a04c8c349cc5071b2f2e234b9f89}{}\label{class_f_e_problem_ab8d3a04c8c349cc5071b2f2e234b9f89}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+E\+F-\/\+Solver/feproblem.\+h\item 
+E\+F-\/\+Solver/feproblem.\+cpp\end{DoxyCompactItemize}

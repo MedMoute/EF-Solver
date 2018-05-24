@@ -22,6 +22,8 @@ class FEProblem : public QObject
     Q_OBJECT
 public:
     FEProblem(Maillage3D* _maillage,RHS* _rhs,BC* _bc,int _op,bool _unit);
+    ~FEProblem(){delete A;}
+    void ClearA(){delete A;}
     C3 CalcIntOnTriangle(Maillage3D* _maillage,BC* _bc,int idx,int tri_idx);
     C3 CalcIntOnTetrahedron(Maillage3D* _maillage,RHS* _bc,int idx,int tetra_idx);
 

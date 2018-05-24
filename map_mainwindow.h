@@ -27,16 +27,15 @@ public:
     void CreateMeshBuffer();
     void AssembleAll();
     ~MAP_MainWindow();
-
 public slots:
-    void on_pushButton_load_3D_released();
-    void on_pushButton_load_RHS_released();
-    void on_pushButton_mat_assemb_released();
-    void on_pushButton_load_BC_released();
-    void on_pushButton_solve_released();
-    void on_pushButton_load_Mat_released();
-    void on_pushButton_save_output_released();
-    void on_pushButton_vis_3D_released();
+    void on_pushButton_load_3D_clicked();
+    void on_pushButton_load_RHS_clicked();
+    void on_pushButton_mat_assemb_clicked();
+    void on_pushButton_load_BC_clicked();
+    void on_pushButton_solve_clicked();
+    void on_pushButton_load_Mat_clicked();
+    void on_pushButton_save_output_clicked();
+    void on_pushButton_vis_3D_clicked();
 private:
     Ui::MAP_MainWindow *ui;
     Maillage3D *maillage;

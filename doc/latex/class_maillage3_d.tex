@@ -1,0 +1,104 @@
+\hypertarget{class_maillage3_d}{}\section{Maillage3D Class Reference}
+\label{class_maillage3_d}\index{Maillage3D@{Maillage3D}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Maillage3D} (ifstream \&file)\hypertarget{class_maillage3_d_a4cb644d6eb850e43cedbf76d6a0c7670}{}\label{class_maillage3_d_a4cb644d6eb850e43cedbf76d6a0c7670}
+
+\item 
+vector$<$ int $>$ $\ast$ {\bfseries Get\+Partitions\+Map} ()\hypertarget{class_maillage3_d_a67233581efb7b8c3871e6e790c194ad0}{}\label{class_maillage3_d_a67233581efb7b8c3871e6e790c194ad0}
+
+\item 
+map$<$ int, int $>$ $\ast$ {\bfseries Get\+Partition\+Data\+Map} ()\hypertarget{class_maillage3_d_a39d95905ed37c2648c823a8b1cf49201}{}\label{class_maillage3_d_a39d95905ed37c2648c823a8b1cf49201}
+
+\item 
+map$<$ int, \hyperlink{class_r3}{R3} $>$ $\ast$ {\bfseries Get\+Nodes\+Map} ()\hypertarget{class_maillage3_d_ac9fb51e0a9321c7517c034933fa7784b}{}\label{class_maillage3_d_ac9fb51e0a9321c7517c034933fa7784b}
+
+\item 
+map$<$ int, \hyperlink{class_r3}{R3} $>$ $\ast$ {\bfseries Get\+Boundary\+Nodes\+Map} ()\hypertarget{class_maillage3_d_a0d2839624de6ccc1c875a9ead1877dfc}{}\label{class_maillage3_d_a0d2839624de6ccc1c875a9ead1877dfc}
+
+\item 
+map$<$ int, tuple$<$ int, int, int, int $>$ $>$ $\ast$ {\bfseries Get\+Elements\+Map} ()\hypertarget{class_maillage3_d_a1b6ae9e950380f2b7e8fae2b229779e6}{}\label{class_maillage3_d_a1b6ae9e950380f2b7e8fae2b229779e6}
+
+\item 
+map$<$ int, set$<$ int $>$ $\ast$ $>$ $\ast$ {\bfseries Get\+Neighbours\+Map} ()\hypertarget{class_maillage3_d_aa2adbe2eacaa1fc937bc649c044a6ce3}{}\label{class_maillage3_d_aa2adbe2eacaa1fc937bc649c044a6ce3}
+
+\item 
+map$<$ int, set$<$ int $>$ $\ast$ $>$ $\ast$ {\bfseries Get\+Neighbours\+Elements\+Map} ()\hypertarget{class_maillage3_d_a9128a84b0d0490426f1686625cc1b96e}{}\label{class_maillage3_d_a9128a84b0d0490426f1686625cc1b96e}
+
+\item 
+map$<$ int, set$<$ int $>$ $\ast$ $>$ $\ast$ {\bfseries Get\+Neighbours\+Faces\+Map} ()\hypertarget{class_maillage3_d_a66c77483c54d224a33d18f94a6358c21}{}\label{class_maillage3_d_a66c77483c54d224a33d18f94a6358c21}
+
+\item 
+map$<$ int, tuple$<$ int, int, int $>$ $>$ $\ast$ {\bfseries Get\+Faces\+Map} ()\hypertarget{class_maillage3_d_ad025d923936e118f28f58da6678b68a5}{}\label{class_maillage3_d_ad025d923936e118f28f58da6678b68a5}
+
+\item 
+map$<$ int, tuple$<$ int, int, int $>$ $>$ $\ast$ {\bfseries Get\+Boundary\+Faces\+Map} ()\hypertarget{class_maillage3_d_a17c2008e3ce49edbb663b4e94a128a5e}{}\label{class_maillage3_d_a17c2008e3ce49edbb663b4e94a128a5e}
+
+\item 
+map$<$ int, pair$<$ int, int $>$ $>$ $\ast$ {\bfseries Get\+Triangles\+Interface\+Map} ()\hypertarget{class_maillage3_d_a8579c71a9e0416421a82ea67c5cf2adb}{}\label{class_maillage3_d_a8579c71a9e0416421a82ea67c5cf2adb}
+
+\item 
+map$<$ int, tuple$<$ int, int, int $>$ $>$ $\ast$ {\bfseries Get\+Triangles\+Nodes\+Interface\+Map} ()\hypertarget{class_maillage3_d_a48acf283b9bebf3c1c618a7337f279e1}{}\label{class_maillage3_d_a48acf283b9bebf3c1c618a7337f279e1}
+
+\item 
+int {\bfseries Get\+Partition\+Size} (int part)\hypertarget{class_maillage3_d_a345cbc564a1653bead5a2508b1b1b132}{}\label{class_maillage3_d_a345cbc564a1653bead5a2508b1b1b132}
+
+\item 
+int {\bfseries Get\+Elements\+Size} ()\hypertarget{class_maillage3_d_a0e71069f7b043621238c72167ef1fa2b}{}\label{class_maillage3_d_a0e71069f7b043621238c72167ef1fa2b}
+
+\item 
+int {\bfseries Get\+Faces\+Size} ()\hypertarget{class_maillage3_d_aa901d66f5755580392f62a38531552fe}{}\label{class_maillage3_d_aa901d66f5755580392f62a38531552fe}
+
+\item 
+int {\bfseries Get\+Edges\+Size} ()\hypertarget{class_maillage3_d_a1fc61fb4772dc1351615be462ef9c057}{}\label{class_maillage3_d_a1fc61fb4772dc1351615be462ef9c057}
+
+\item 
+int {\bfseries Get\+Nodes\+Size} ()\hypertarget{class_maillage3_d_a3e4211e571e2bfeb5b71527b1eb90f9f}{}\label{class_maillage3_d_a3e4211e571e2bfeb5b71527b1eb90f9f}
+
+\item 
+map$<$ int, tuple$<$ int, int, int, int $>$ $>$\+::iterator {\bfseries Get\+Elements\+Begin\+Iterator} ()\hypertarget{class_maillage3_d_ac2efb256ab107604d7b38b274079e6cf}{}\label{class_maillage3_d_ac2efb256ab107604d7b38b274079e6cf}
+
+\item 
+map$<$ int, tuple$<$ int, int, int, int $>$ $>$\+::iterator {\bfseries Get\+Elements\+End\+Iterator} ()\hypertarget{class_maillage3_d_a9fd0670340a755340e0fd98f3974e327}{}\label{class_maillage3_d_a9fd0670340a755340e0fd98f3974e327}
+
+\item 
+int {\bfseries Get\+Elements\+First\+Node\+Index} (int tetr)\hypertarget{class_maillage3_d_a38e38c0780b249912ce4306af86475fc}{}\label{class_maillage3_d_a38e38c0780b249912ce4306af86475fc}
+
+\item 
+int {\bfseries Get\+Elements\+Second\+Node\+Index} (int tetr)\hypertarget{class_maillage3_d_ae4471b28638125300989caf8ba541391}{}\label{class_maillage3_d_ae4471b28638125300989caf8ba541391}
+
+\item 
+int {\bfseries Get\+Elements\+Third\+Node\+Index} (int tetr)\hypertarget{class_maillage3_d_ab848af39c137fc2c19c51f15066488ea}{}\label{class_maillage3_d_ab848af39c137fc2c19c51f15066488ea}
+
+\item 
+int {\bfseries Get\+Elements\+Fourth\+Node\+Index} (int tetr)\hypertarget{class_maillage3_d_a638a2fc7195de3bda56446146f4277d4}{}\label{class_maillage3_d_a638a2fc7195de3bda56446146f4277d4}
+
+\item 
+void {\bfseries Display\+Interfaces\+Elements} ()\hypertarget{class_maillage3_d_a909cf720c7d174a415b972cf528dac7f}{}\label{class_maillage3_d_a909cf720c7d174a415b972cf528dac7f}
+
+\item 
+void {\bfseries Display\+Interfaces\+Triangles} ()\hypertarget{class_maillage3_d_afc15ae92a1b7bd5193379b0d8897ac82}{}\label{class_maillage3_d_afc15ae92a1b7bd5193379b0d8897ac82}
+
+\item 
+void {\bfseries Display\+Boundary\+Elements} ()\hypertarget{class_maillage3_d_ad06d861b9da1be8b3b25fe291e507c49}{}\label{class_maillage3_d_ad06d861b9da1be8b3b25fe291e507c49}
+
+\item 
+void {\bfseries Display\+Basic\+Data} ()\hypertarget{class_maillage3_d_ac75a9dc094220de48de7019c7c26ed2e}{}\label{class_maillage3_d_ac75a9dc094220de48de7019c7c26ed2e}
+
+\item 
+void {\bfseries Create\+Interface\+Triangles} ()\hypertarget{class_maillage3_d_ad9f418d68538572cbac972ed06292ceb}{}\label{class_maillage3_d_ad9f418d68538572cbac972ed06292ceb}
+
+\item 
+int {\bfseries Export\+Mesh\+As\+O\+B\+J\+File} (string File\+Path, bool verbose=0)\hypertarget{class_maillage3_d_a83c7b21c6f33946ceb59fade2dbb93b5}{}\label{class_maillage3_d_a83c7b21c6f33946ceb59fade2dbb93b5}
+
+\item 
+pair$<$ bool, tuple$<$ int, int, int $>$ $>$ {\bfseries Common\+Triangle} (tuple$<$ int, int, int, int $>$, tuple$<$ int, int, int, int $>$)\hypertarget{class_maillage3_d_ad962a76ff2824457bb8dd0cfd19e0341}{}\label{class_maillage3_d_ad962a76ff2824457bb8dd0cfd19e0341}
+
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+E\+F-\/\+Solver/maillage3d.\+h\item 
+E\+F-\/\+Solver/maillage3d.\+cpp\end{DoxyCompactItemize}

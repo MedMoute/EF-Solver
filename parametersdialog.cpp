@@ -1,8 +1,8 @@
 #include "parametersdialog.h"
 #include "ui_parametersdialog.h"
 #include <algorithm>
-ParametersDialog::ParametersDialog(std::vector<int>*partitions, QWidget *parent) :
-    QDialog(parent),
+ParametersDialog::ParametersDialog(std::vector<int>*partitions, int _op, QWidget *parent) :
+    QDialog(parent),op(_op),
     ui(new Ui::ParametersDialog)
 {
     ui->setupUi(this);

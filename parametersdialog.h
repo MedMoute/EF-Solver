@@ -13,14 +13,16 @@ class ParametersDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ParametersDialog(std::vector<int>* partitions,QWidget *parent = 0);
+    explicit ParametersDialog(std::vector<int>* partitions,int _op,QWidget *parent = 0);
     ~ParametersDialog();
     Ui::ParametersDialog* GetUI(){return ui;}
     std::map<int,double> GetData(){return part_data;}
+    int GetOP(){return op;}
 
 private:
     Ui::ParametersDialog *ui;
     std::map<int,double> part_data;
+    int op;
 
 public slots:
     void on_pushButton_validate_released();

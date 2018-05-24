@@ -1,0 +1,26 @@
+\hypertarget{index_intro_sec}{}\section{Introduction}\label{index_intro_sec}
+L\textquotesingle{}objectif de ce projet est la réalisation d\textquotesingle{}un solveur de problème de type E\+DP linéaires. Plus particulièrement, l\textquotesingle{}objectif principal est la résolution du problème dit du Micro-\/\+Onde, dont on fait ici le rappel de l\textquotesingle{}énoncé\+:\hypertarget{index_a}{}\subsection{Enoncé du problème}\label{index_a}
+En version Helmholtz il s’agit de résoudre un probleme du type\+: Trouver u une fonction définie sur l’ouvert  a valeur dans C tel que
+
+ω$^\wedge$2µu + ∇.1/ε∇u = 0 ∈ Ω avec des données aux bord imaginaires.
+
+Le couplage avec la température θ, se fait comme suivant\+:
+
+−∇.\+K∇θ = f
+
+dans l’objet a cuire, et où f est nulle hors de l’objet a cuire, et est égal a uu dans l’objet a cuire.
+
+Le projet est la résolution de 2 équations découples avec les données suivantes \+:
+
+ε = 1 dans l’air et ε = 4 dans la viande.
+
+On pourra prendre des conditions de Dirichlet sur l’objet a cuire.\hypertarget{index_Problématiques}{}\subsection{Problématiques}\label{index_Problématiques}
+En étudiant l\textquotesingle{}énoncé ,on constate que ce projet comporte plusieurs points importants, liés à dés problématiques variées sur le plan de l\textquotesingle{}analyse numérique, de l\textquotesingle{}analyse matricielle ou encore de l\textquotesingle{}informatique.
+
+
+\begin{DoxyItemize}
+\item Le problème est tridimensionnel, cela implique une croissance cubique de la taille des matrices par rapport à la dimension du problème. Cela implique que la résolution des systèmes linéaires ne peut se faire par le biais d\textquotesingle{}un algorithme de résolution directe (décompositions Q\+R/\+LU), on préviligiera donc des méthodes itératives.
+\item Le problème est vectoriel, mais l\textquotesingle{}opérateur est unique, i.\+e. chaque résolution comporte 3 \char`\"{}seconds membres\char`\"{} correspondant chacuns à l\textquotesingle{}une des dimensions dans laquelle le problème est résolu.
+\item La matrice correspondant au problème discrétisé n\textquotesingle{}est pas nécessairment définie, elle est en revanche symétrique. Cela implique un choix préférentiel pour la résolution du système \+: la méthode M\+I\+N\+Res
+\item Quant à la gestion des données d\textquotesingle{}entrée/sortie, l\textquotesingle{}énoncé reste vague, mais implique que le programme doit être capable de gérer les partitions de maillages. 
+\end{DoxyItemize}

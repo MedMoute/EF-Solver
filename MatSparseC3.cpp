@@ -1,4 +1,5 @@
 #include "MatSparseC3.h"
+#include "utils.h"
 
 VectorC3::VectorC3(ifstream &fd)
 {
@@ -247,10 +248,21 @@ int  MatSparseC3::IdxSearch(int _row,int _column)
     int j;
     //Search on the interval between the start of the current row and the next one
     // we use row-1 as starting index since the standard algebraic row numerotation starts at 1 while P[] is a "standard" array
-    for(j=P[_row-1];j<min(long(P[_row]),J.size());j++)
+    if (_row<this->P.size())
     {
-        if (J[j]==_column)
-            return j;
+        for(j=P[_row-1];j<P[_row];j++)
+        {
+            if (J[j]==_column)
+                return j;
+        }
+    }
+    else
+    {
+        for(j=P[_row-1];j<=J.size();j++)
+        {
+            if (J[j]==_column)
+                return j;
+        }
     }
     return -1;
 }
@@ -320,7 +332,7 @@ const{
                             (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
                         }
                         //Debug for insertions
-                       // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
+                        // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
                     }
 
                 }
@@ -349,10 +361,50 @@ const{
                         (_o.X[j])[i]+=C((C_data.X[j])[k]*(_X.X[j])[J[k]-1]);
                     }
                     //Debug for insertions
-                   // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
+                    // cout<<"Insert in ["<<i<<"] : "<<C((C_data.X[j])[k]*(_X.X[j])[J[k]])<< "at k = "<<k<<endl;
                 }
             }
         }
     }
 }
 
+void MatSparseC3::DisplayToOutput_Scilab()
+{
+    int i,j;
+    int cur=0;
+    cout<<"mat=([";
+    for (i=1;i<=size;i++)
+    {
+
+        for(j=1;j<=size;j++)
+        {
+
+            if(J[cur]==j)
+            {
+                cout<<C_data.X[0][cur].real()<<"+imult("<<C_data.X[0][cur].imag()<<") ";
+                cur++;
+            }
+            else
+            {
+                cout<<"0+imult(0) ";
+            }
+        }
+        cout<<"]);"<<endl;
+        cout<<"mat=cat(1,mat,[";
+    }
+    util::print_separator();
+}
+
+void VectorC3::DisplayToOutput_Scilab(int comp)
+{
+    int i;
+    cout<<"vec=([";
+    for (i=0;i<this->size();i++)
+    {
+        cout<<X[comp][i].real()<<"+imult("<<X[comp][i].imag()<<") ";
+        cout<<"]);"<<endl;
+        cout<<"vec=cat(1,vec,[";
+    }
+
+
+}

@@ -3,6 +3,7 @@
 
 #include <QDir>
 #include <QDateTime>
+#include <complex>
 
 //Sparse Linear Algebra solver system for ComplexVectoriel (C3) Symetrical Matrices
 //
@@ -44,15 +45,15 @@ Solver::Solver(FEProblem* _fep, SolverMethod _meth,double _eps):A(_fep->GetA()),
         wp=new VectorC3;
         Awp = new VectorC3;
         result = Solve_Orthodir();
-        delete Awp;
-        delete wp;
+        //delete Awp;
+        //delete wp;
         break;
     case MinRES:
         wp = new VectorC3;
         vp = new VectorC3;
         result = Solve_MinRES();
-        delete vp;
-        delete wp;
+        //delete vp;
+        //delete wp;
         break;
     default:
         break;
@@ -227,6 +228,9 @@ int Solver::Solve_MinRES()
     wp[0].init(B.size());
     vp[0].init(B.size());
     vp[1].init(B.size());
+
+    //A->DisplayToOutput_Scilab();
+    //B.DisplayToOutput_Scilab(2);
     //MinRES Initialisation
     for (int p = 1;p<MAX_ITER;p++)
     {
@@ -236,7 +240,7 @@ int Solver::Solve_MinRES()
         {
             //Init
             //We assume X(0)=B
-            X=B;
+            X.init(B.size());
 
             A->MatVectMul(X,res);
             res-=B;
@@ -246,14 +250,18 @@ int Solver::Solve_MinRES()
             n_res[p]=res.Re_norms();
         }
         A->MatVectMul(vp[p],w);
+
         if (p>1) {
             t[p-1][2]=t[p][0];
-            w=w-vp[p-1]*t[p][0];
+            w-=vp[p-1]*t[p][0];
         }
 
         t[p][1]=(w,vp[p]);
-        w=w-vp[p]*t[p][1];
+        w-=vp[p]*t[p][1];
+        //cout<<"T[p][1] : "<<t[p][1].comp(1)<<" - "<<t[p][1].comp(2)<<" - "<<t[p][1].comp(3)<<endl;
+        //cout<<"w[2] ->"<<w.X[2]<<endl;
         t[p+1][0]=w.Re_norms();
+        //cout<<"T[p+1][0] : "<<t[p+1][0].comp(1)<<" - "<<t[p+1][0].comp(2)<<" - "<<t[p+1][0].comp(3)<<endl;
 
 
         vp[p+1]=w*(t[p+1][0]).comp_inv();
@@ -281,10 +289,12 @@ int Solver::Solve_MinRES()
                 if (p==1)
                     a[p]=t[p][1];
         }
+        //cout<<"A[p][0] : "<<a[p].comp(1)<<" - "<<a[p].comp(2)<<" - "<<a[p].comp(3)<<endl;
+
         c[p]=C3(C3(C(1,0),C(1,0),C(1,0))/(C3(C(1,0),C(1,0),C(1,0))+(t[p+1][0]/a[p])*(t[p+1][0]/a[p]))).sqrt_();
+        //cout<<"Cos : "<<c[p].comp(1)<<" - "<<c[p].comp(2)<<" - "<<c[p].comp(3)<<endl;
         s[p]=-c[p]*t[p+1][0]/a[p];
         r[p][0]=c[p]*a[p] -s[p]*t[p+1][0];
-        //disp(S(p).C(p))
         b[p]=-c[p]*n_res[p];
         n_res[p+1]=s[p]*n_res[p] ;
         cout<<"Iter num: "<<p<<" - ||res||"<<n_res[p]<<endl;
@@ -309,7 +319,7 @@ int Solver::Solve_MinRES()
                     wp[p]/=r[p][0];
                 }
         //compute xp
-        X=X+wp[p]*b[p];
+        X+=wp[p]*b[p];
         //    cout<<wp[p].X[0]<<endl;
         if(n_res[p].norm()<eps)
             break;
@@ -318,7 +328,7 @@ int Solver::Solve_MinRES()
     util::print_separator();
     string filepath;
     filepath = (QDir::currentPath()+"/MINRESsolv_out.tmp").toStdString();
-    cout<<"Exporting Mesh File as "<<filepath<<"."<<endl;
+    cout<<"Exporting Output File as "<<filepath<<"."<<endl;
     std::ofstream FILE;
     int j;
     FILE.open(filepath.c_str(), std::ios::out);
@@ -329,18 +339,37 @@ int Solver::Solve_MinRES()
     }
     else // Working out FILE : dumping output
     {
-        FILE<<"#File Generated on "<<QDateTime::currentDateTime().toString().toStdString()<<" by EF-Solver.Solve_MinRES"<<endl;
+        FILE<<"$RHSExplicit"<<endl;
+        FILE<<B.size()<<endl;
     }
     for (j=0;j<B.size();j++)
     {
-        FILE<<X.X[0][j]<<"~"<<X.X[1][j]<<"~"<<X.X[2][j]<<endl;
-    }
-    FILE<<endl;
-    for (j=0;j<B.size();j++)
-    {
-        FILE<<B.X[0][j]<<"~"<<B.X[1][j]<<"~"<<B.X[2][j]<<endl;
+        FILE<<j<<" "<<X.X[0][j].real()<<" "<<X.X[1][j].real()<<" "<<X.X[2][j].real();
+        FILE<<" "<<X.X[0][j].imag()<<" "<<X.X[1][j].imag()<<" "<<X.X[2][j].imag()<<endl;
     }
     FILE.close();
+
+    //TMP data to grab u.conj(u) if the program crashes/cannot recover after quitting the solver
+    filepath = (QDir::currentPath()+"/MINRESsolv_out_U_sq.tmp").toStdString();
+    cout<<"Exporting Squared Output File as "<<filepath<<"."<<endl;
+    std::ofstream FILE_2;
+    FILE_2.open(filepath.c_str(), std::ios::out);
+    if (FILE_2.fail())
+    {
+        std::cout<<"Erreur lors de l'ouverture de FILE_2"<<std::endl;
+        return 1;
+    }
+    else // Working out FILE : dumping output
+    {
+        FILE_2<<"$RHSExplicit"<<endl;
+        FILE_2<<B.size()<<endl;
+    }
+    for (j=0;j<B.size();j++)
+    {
+        FILE_2<<j<<" "<<(X.X[0][j]*std::conj(X.X[0][j])).real()<<" "<<(X.X[1][j]*std::conj(X.X[1][j])).real()<<" "<<(X.X[2][j]*std::conj(X.X[2][j])).real();
+        FILE_2<<" "<<(X.X[0][j]*std::conj(X.X[0][j])).imag()<<" "<<(X.X[1][j]*std::conj(X.X[1][j])).imag()<<" "<<(X.X[2][j]*std::conj(X.X[2][j])).imag()<<endl;
+    }
+    FILE_2.close();
 }
 
 void Solver::initSolver(int _l)

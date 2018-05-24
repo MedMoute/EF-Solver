@@ -376,8 +376,6 @@ Maillage3D::Maillage3D(ifstream& fd)
     //On ajoute le traitement des interfaces et la création des structures de triangles posés sur les interfaces
     if (partitions->size()>1)
         CreateInterfaceTriangles();
-
-    DisplayInterfacesTriangles();
 }
 
 int Maillage3D::GetPartitionSize( int _part)
